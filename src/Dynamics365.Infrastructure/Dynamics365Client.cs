@@ -128,6 +128,7 @@ namespace CluedIn.Crawling.Dynamics365.Infrastructure
                         if (responseMessage.StatusCode == HttpStatusCode.Unauthorized)
                         {
                             RefreshToken(dynamics365CrawlJobData);
+                            continue;
                         }
                         else if (responseMessage.StatusCode != HttpStatusCode.OK)
                         {
