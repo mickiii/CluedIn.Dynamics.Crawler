@@ -11,6 +11,7 @@ using CluedIn.Core.Providers;
 using CluedIn.Core.Webhooks;
 using CluedIn.Crawling.Dynamics365.Core;
 using CluedIn.Crawling.Dynamics365.Infrastructure.Factories;
+using CluedIn.Crawling.Dynamics365.Infrastructure;
 using CluedIn.Providers.Models;
 using Microsoft.IdentityModel.Clients.ActiveDirectory;
 using Newtonsoft.Json;
@@ -46,8 +47,11 @@ namespace CluedIn.Provider.Dynamics365
             { dynamics365CrawlJobData.UserName = configuration[Dynamics365Constants.KeyName.UserName].ToString(); }
             if (configuration.ContainsKey(Dynamics365Constants.KeyName.Password))
             { dynamics365CrawlJobData.Password = configuration[Dynamics365Constants.KeyName.Password].ToString(); }
-            dynamics365CrawlJobData.ClientId = ConfigurationManager.AppSettings.GetValue<string>("Providers.Dynamics365ClientId", null);
-            dynamics365CrawlJobData.ClientSecret = ConfigurationManager.AppSettings.GetValue<string>("Providers.Dynamics365ClientSecret", null);
+
+            var fallbackClientId = "clientId";
+            var fallbackClientSecret = "clientSecret";
+            dynamics365CrawlJobData.ClientId = ConfigurationManager.AppSettings.GetValue<string>("Providers.Dynamics365ClientId", fallbackClientId);
+            dynamics365CrawlJobData.ClientSecret = ConfigurationManager.AppSettings.GetValue<string>("Providers.Dynamics365ClientSecret", fallbackClientSecret);
 
             string apiVersion = "9.1";
             string webApiUrl = $"{dynamics365CrawlJobData.Url}/api/data/v{apiVersion}/";
@@ -56,7 +60,7 @@ namespace CluedIn.Provider.Dynamics365
             {
                 if (dynamics365CrawlJobData.UserName != null && dynamics365CrawlJobData.Password != null)
                 {
-                    Crawling.Dynamics365.Infrastructure.Dynamics365Client.RefreshToken(dynamics365CrawlJobData);
+                    Dynamics365Client.RefreshToken(dynamics365CrawlJobData);
                 }
                 else
                 {

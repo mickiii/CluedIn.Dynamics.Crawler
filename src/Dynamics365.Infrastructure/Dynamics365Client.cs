@@ -80,12 +80,19 @@ namespace CluedIn.Crawling.Dynamics365.Infrastructure
             string apiVersion = "9.1";
             string webApiUrl = $"{dynamics365CrawlJobData.Url}/api/data/v{apiVersion}/";
 
-            var authenticationParameters = await AuthenticationParameters.CreateFromUrlAsync(new Uri(dynamics365CrawlJobData.Url + "/api/data/v9.0"));
-            //Workaround. Current version of AD library creates a wrong authority
-            authenticationParameters.Authority = authenticationParameters.Authority.Substring(0, authenticationParameters.Authority.Length - 16);
-            AuthenticationContext authenticationContext = new AuthenticationContext(authenticationParameters.Authority);
-            var token = authenticationContext.AcquireTokenAsync(authenticationParameters.Resource, new ClientCredential(dynamics365CrawlJobData.ClientId, dynamics365CrawlJobData.ClientSecret)).Result;
-            dynamics365CrawlJobData.TargetApiKey = token.AccessToken;
+            try
+            {
+                var authenticationParameters = await AuthenticationParameters.CreateFromUrlAsync(new Uri(dynamics365CrawlJobData.Url + "/api/data/v9.0"));
+                //Workaround. Current version of AD library creates a wrong authority
+                authenticationParameters.Authority = authenticationParameters.Authority.Substring(0, authenticationParameters.Authority.Length - 16);
+                AuthenticationContext authenticationContext = new AuthenticationContext(authenticationParameters.Authority);
+                var token = authenticationContext.AcquireTokenAsync(authenticationParameters.Resource, new ClientCredential(dynamics365CrawlJobData.ClientId, dynamics365CrawlJobData.ClientSecret)).Result;
+                dynamics365CrawlJobData.TargetApiKey = token.AccessToken;
+            }
+            catch
+            {
+                throw new Exception("Unable to fetch token");
+            }
         }
 
         public IEnumerable<T> Get<T>(string value, Dynamics365CrawlJobData dynamics365CrawlJobData)
@@ -116,7 +123,6 @@ namespace CluedIn.Crawling.Dynamics365.Infrastructure
                 {
                     try
                     {
-
                         httpClient.Timeout = new TimeSpan(0, 2, 0);
                         httpClient.DefaultRequestHeaders.Add("Prefer", "odata.maxpagesize=100");
                         httpClient.DefaultRequestHeaders.Add("OData-MaxVersion", "4.0");
