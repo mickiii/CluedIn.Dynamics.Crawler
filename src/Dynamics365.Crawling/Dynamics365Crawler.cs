@@ -2,7 +2,6 @@ using System.Collections.Generic;
 
 using CluedIn.Core.Crawling;
 using CluedIn.Crawling.Dynamics365.Core;
-using CluedIn.Crawling.Dynamics365.Core.Models;
 using CluedIn.Crawling.Dynamics365.Infrastructure.Factories;
 
 namespace CluedIn.Crawling.Dynamics365
@@ -25,14 +24,7 @@ namespace CluedIn.Crawling.Dynamics365
             var client = clientFactory.CreateNew(dynamics365crawlJobData);
 
             //retrieve data from provider and yield objects
-            foreach (var item in client.Get<CRM_CONTACT>("contact", dynamics365crawlJobData))
-            {
-                yield return item;
-            }
-            foreach (var item in client.Get<CRM_LEAD>("lead", dynamics365crawlJobData))
-            {
-                yield return item;
-            }
+            
         }       
     }
 }

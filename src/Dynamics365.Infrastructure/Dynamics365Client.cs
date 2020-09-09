@@ -8,6 +8,7 @@ using CluedIn.Core.Logging;
 using CluedIn.Core.Providers;
 using CluedIn.Crawling.Dynamics365.Core;
 using CluedIn.Crawling.Dynamics365.Core.Models;
+using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Clients.ActiveDirectory;
 using Newtonsoft.Json;
 using RestSharp;
@@ -23,12 +24,11 @@ namespace CluedIn.Crawling.Dynamics365.Infrastructure
     {
         private const string BaseUri = "http://sample.com";
 
-        private readonly ILogger log;
-
-        private readonly IRestClient client;
+        private readonly ILogger<Dynamics365Client> _log;
+        private readonly IRestClient _client;
         private readonly Dynamics365CrawlJobData _dynamics365CrawlJobData;
 
-        public Dynamics365Client(ILogger log, Dynamics365CrawlJobData dynamics365CrawlJobData, IRestClient client) // TODO: pass on any extra dependencies
+        public Dynamics365Client(ILogger<Dynamics365Client> log, Dynamics365CrawlJobData dynamics365CrawlJobData, IRestClient client) // TODO: pass on any extra dependencies
         {
             if (dynamics365CrawlJobData == null)
             {
@@ -40,8 +40,8 @@ namespace CluedIn.Crawling.Dynamics365.Infrastructure
                 throw new ArgumentNullException(nameof(client));
             }
 
-            this.log = log ?? throw new ArgumentNullException(nameof(log));
-            this.client = client ?? throw new ArgumentNullException(nameof(client));
+            _log = log ?? throw new ArgumentNullException(nameof(log));
+            _client = client ?? throw new ArgumentNullException(nameof(client));
             _dynamics365CrawlJobData = dynamics365CrawlJobData ?? throw new ArgumentNullException(nameof(dynamics365CrawlJobData));
 
 
@@ -54,12 +54,12 @@ namespace CluedIn.Crawling.Dynamics365.Infrastructure
         {
             var request = new RestRequest(url, Method.GET);
 
-            var response = await client.ExecuteTaskAsync(request);
+            var response = await _client.ExecuteTaskAsync(request);
 
             if (response.StatusCode != HttpStatusCode.OK)
             {
-                var diagnosticMessage = $"Request to {client.BaseUrl}{url} failed, response {response.ErrorMessage} ({response.StatusCode})";
-                log.Error(() => diagnosticMessage);
+                var diagnosticMessage = $"Request to {_client.BaseUrl}{url} failed, response {response.ErrorMessage} ({response.StatusCode})";
+                _log.LogError(diagnosticMessage);
                 throw new InvalidOperationException($"Communication to jsonplaceholder unavailable. {diagnosticMessage}");
             }
 
@@ -75,17 +75,17 @@ namespace CluedIn.Crawling.Dynamics365.Infrastructure
             return new AccountInformation("", "");
         }
 
-        public static void RefreshToken(Dynamics365CrawlJobData dynamics365CrawlJobData)
+        public static async void RefreshToken(Dynamics365CrawlJobData dynamics365CrawlJobData)
         {
             string apiVersion = "9.1";
             string webApiUrl = $"{dynamics365CrawlJobData.Url}/api/data/v{apiVersion}/";
 
-            var userCredential = new UserCredential(dynamics365CrawlJobData.UserName, dynamics365CrawlJobData.Password);
-            var authParameters = AuthenticationParameters.CreateFromResourceUrlAsync(new Uri(webApiUrl)).Result;
-            var authContext = new AuthenticationContext(authParameters.Authority, false);
-            var authResult = authContext.AcquireTokenAsync(authParameters.Resource, dynamics365CrawlJobData.ClientId, userCredential).Result;
-            var refreshToken = authContext.AcquireTokenByRefreshTokenAsync(authResult.RefreshToken, dynamics365CrawlJobData.ClientId).Result;
-            dynamics365CrawlJobData.ApiKey = refreshToken.AccessToken;
+            var authenticationParameters = await AuthenticationParameters.CreateFromUrlAsync(new Uri(dynamics365CrawlJobData.Url + "/api/data/v9.0"));
+            //Workaround. Current version of AD library creates a wrong authority
+            authenticationParameters.Authority = authenticationParameters.Authority.Substring(0, authenticationParameters.Authority.Length - 16);
+            AuthenticationContext authenticationContext = new AuthenticationContext(authenticationParameters.Authority);
+            var token = authenticationContext.AcquireTokenAsync(authenticationParameters.Resource, new ClientCredential(dynamics365CrawlJobData.ClientId, dynamics365CrawlJobData.ClientSecret)).Result;
+            dynamics365CrawlJobData.TargetApiKey = token.AccessToken;
         }
 
         public IEnumerable<T> Get<T>(string value, Dynamics365CrawlJobData dynamics365CrawlJobData)
@@ -132,13 +132,13 @@ namespace CluedIn.Crawling.Dynamics365.Infrastructure
                         }
                         else if (responseMessage.StatusCode != HttpStatusCode.OK)
                         {
-                            log.Error(() => "Connection failed " + responseMessage.StatusCode);
+                            _log.LogError("Connection failed " + responseMessage.StatusCode);
                         }
                         resultList = JsonConvert.DeserializeObject<ResultList<T>>(content, new JsonSerializerSettings() { NullValueHandling = NullValueHandling.Ignore });
                     }
                     catch (Exception e)
                     {
-                        log.Error(() => e.Message);
+                        _log.LogError(e.Message);
                     }
 
 

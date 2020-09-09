@@ -52,17 +52,24 @@ namespace CluedIn.Provider.Dynamics365
             string apiVersion = "9.1";
             string webApiUrl = $"{dynamics365CrawlJobData.Url}/api/data/v{apiVersion}/";
 
-            if (dynamics365CrawlJobData.UserName != null && dynamics365CrawlJobData.Password != null)
+            try
             {
-                Crawling.Dynamics365.Infrastructure.Dynamics365Client.RefreshToken(dynamics365CrawlJobData);
+                if (dynamics365CrawlJobData.UserName != null && dynamics365CrawlJobData.Password != null)
+                {
+                    Crawling.Dynamics365.Infrastructure.Dynamics365Client.RefreshToken(dynamics365CrawlJobData);
+                }
+                else
+                {
+                    var clientCredential = new ClientCredential(dynamics365CrawlJobData.ClientId, dynamics365CrawlJobData.ClientSecret);
+                    var authParameters = await AuthenticationParameters.CreateFromUrlAsync(new Uri(webApiUrl));
+                    var authContext = new AuthenticationContext(authParameters.Authority);
+                    var authResult = authContext.AcquireTokenAsync(authParameters.Resource, clientCredential).Result;
+                    dynamics365CrawlJobData.TargetApiKey = authResult.AccessToken;
+                }
             }
-            else
+            catch
             {
-                var clientCredential = new ClientCredential(dynamics365CrawlJobData.ClientId, dynamics365CrawlJobData.ClientSecret);
-                var authParameters = await AuthenticationParameters.CreateFromResourceUrlAsync(new Uri(webApiUrl));
-                var authContext = new AuthenticationContext(authParameters.Authority);
-                var authResult = authContext.AcquireTokenAsync(authParameters.Resource, clientCredential).Result;
-                dynamics365CrawlJobData.TargetApiKey = authResult.AccessToken;
+                throw new Exception("Unable to fetch token");
             }
 
             return await Task.FromResult(dynamics365CrawlJobData);

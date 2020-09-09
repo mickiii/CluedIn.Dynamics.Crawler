@@ -44,7 +44,7 @@ namespace CluedIn.Provider.Dynamics365.Unit.Test.Dynamics365Provider
         [InlineAutoData]
         public async Task Dynamics365CrawlJobDataReturned(Dictionary<string, object> dictionary, Guid organizationId, Guid userId, Guid providerDefinitionId)
         {
-            Assert.IsType<CluedIn.Crawling.Dynamics365.Core.Dynamics365CrawlJobData>(
+            Assert.IsType<Dynamics365CrawlJobData>(
                 await Sut.GetCrawlJobData(_context, dictionary, organizationId, userId, providerDefinitionId));
         }
     }

@@ -1,9 +1,11 @@
 using System.IO;
 using System.Reflection;
+using Castle.MicroKernel.Registration;
 using CluedIn.Crawling.Dynamics365.Core;
 using CrawlerIntegrationTesting.Clues;
-using CrawlerIntegrationTesting.Log;
 using Xunit.Abstractions;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using DebugCrawlerHost = CrawlerIntegrationTesting.CrawlerHost.DebugCrawlerHost<CluedIn.Crawling.Dynamics365.Core.Dynamics365CrawlJobData>;
 
 namespace CluedIn.Crawling.Dynamics365.Integration.Test
@@ -13,15 +15,19 @@ namespace CluedIn.Crawling.Dynamics365.Integration.Test
         public ClueStorage ClueStorage { get; }
         private readonly DebugCrawlerHost debugCrawlerHost;
 
-        public TestLogger Log { get; }
+        public ILogger<Dynamics365TestFixture> Log { get; }
+
         public Dynamics365TestFixture()
         {
             var executingFolder = new FileInfo(Assembly.GetExecutingAssembly().CodeBase.Substring(8)).DirectoryName;
-            debugCrawlerHost = new DebugCrawlerHost(executingFolder, Dynamics365Constants.ProviderName);
+            debugCrawlerHost = new DebugCrawlerHost(executingFolder, Dynamics365Constants.ProviderName, c => {
+                c.Register(Component.For<ILogger>().UsingFactoryMethod(_ => NullLogger.Instance).LifestyleSingleton());
+                c.Register(Component.For<ILoggerFactory>().UsingFactoryMethod(_ => NullLoggerFactory.Instance).LifestyleSingleton());
+            });
 
             ClueStorage = new ClueStorage();
 
-            Log = debugCrawlerHost.AppContext.Container.Resolve<TestLogger>();
+            Log = debugCrawlerHost.AppContext.Container.Resolve<ILogger<Dynamics365TestFixture>>();
 
             debugCrawlerHost.ProcessClue += ClueStorage.AddClue;
 
@@ -38,7 +44,8 @@ namespace CluedIn.Crawling.Dynamics365.Integration.Test
 
         public void PrintLogs(ITestOutputHelper output)
         {
-            output.WriteLine(Log.PrintLogs());
+            //TODO:
+            //output.WriteLine(Log.PrintLogs());
         }
 
         public void Dispose()

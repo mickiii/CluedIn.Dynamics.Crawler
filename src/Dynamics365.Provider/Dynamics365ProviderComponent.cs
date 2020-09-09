@@ -2,6 +2,7 @@ using Castle.MicroKernel.Registration;
 
 using CluedIn.Core;
 using CluedIn.Core.Providers;
+using CluedIn.Core.Server;
 // 
 using CluedIn.Crawling.Dynamics365.Core;
 using CluedIn.Crawling.Dynamics365.Infrastructure.Installers;
@@ -12,7 +13,7 @@ using ComponentHost;
 namespace CluedIn.Provider.Dynamics365
 {
     [Component(Dynamics365Constants.ProviderName, "Providers", ComponentType.Service, ServerComponents.ProviderWebApi, Components.Server, Components.DataStores, Isolation = ComponentIsolation.NotIsolated)]
-    public sealed class Dynamics365ProviderComponent : ServiceApplicationComponent<EmbeddedServer>
+    public sealed class Dynamics365ProviderComponent : ServiceApplicationComponent<IBusServer>
     {
         public Dynamics365ProviderComponent(ComponentInfo componentInfo)
             : base(componentInfo)
@@ -25,11 +26,10 @@ namespace CluedIn.Provider.Dynamics365
         public override void Start()
         {
             Container.Install(new InstallComponents());
+            var asm = System.Reflection.Assembly.GetExecutingAssembly();
 
-            Container.Register(Types.FromThisAssembly().BasedOn<IProvider>().WithServiceFromInterface().If(t => !t.IsAbstract).LifestyleSingleton());
-            Container.Register(Types.FromThisAssembly().BasedOn<IEntityActionBuilder>().WithServiceFromInterface().If(t => !t.IsAbstract).LifestyleSingleton());
-
-
+            Container.Register(Types.FromAssembly(asm).BasedOn<IProvider>().WithServiceFromInterface().If(t => !t.IsAbstract).LifestyleSingleton());
+            Container.Register(Types.FromAssembly(asm).BasedOn<IEntityActionBuilder>().WithServiceFromInterface().If(t => !t.IsAbstract).LifestyleSingleton());
 
             State = ServiceState.Started;
         }
