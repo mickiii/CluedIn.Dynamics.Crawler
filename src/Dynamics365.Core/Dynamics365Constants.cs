@@ -9,10 +9,7 @@ namespace CluedIn.Crawling.Dynamics365.Core
     {
         public struct KeyName
         {
-            public const string Url = nameof(Url);
-            public const string DeltaCrawlEnabled = nameof(DeltaCrawlEnabled);
-            public const string UserName = nameof(UserName);
-            public const string Password = nameof(Password);
+            public const string ApiKey = nameof(ApiKey);
         }
 
         // TODO Complete the following section
@@ -59,9 +56,12 @@ namespace CluedIn.Crawling.Dynamics365.Core
         public const string ProviderRootCodeValue = "Dynamics365";
         public const string CrawlerName = "Dynamics365Crawler";
         public const string CrawlerComponentName = "Dynamics365Crawler";
-        public static readonly Guid ProviderId = Guid.Parse("9455c0bc-35dd-4ade-8166-970c170e7b89");
+        public static readonly Guid ProviderId = Guid.Parse("1f93371f-7e58-40fd-8ac4-f54b0a93ec64");
         public const string ProviderName = "Dynamics365";
 
+        
+        public const string ClientID = "";
+        public const string ClientSecret = "";
         
 
 
@@ -72,7 +72,7 @@ namespace CluedIn.Crawling.Dynamics365.Core
                                        { "Tracking",        "Expenses and Invoices against customers" },
                                        { "Intelligence",    "Aggregate types of invoices and expenses against customers and companies." }
                                    },
-            Icon = ProviderIconFactory.CreateUri(ProviderId),
+            Icon = ProviderIconFactory.CreateConnectorUri(ProviderId),
             ProviderName = ProviderName,
             ProviderId = ProviderId,
             Webhooks = SupportsWebHooks

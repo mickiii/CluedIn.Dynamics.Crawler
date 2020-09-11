@@ -3,7 +3,7 @@ using System.Linq;
 using AutoFixture.Xunit2;
 using CluedIn.Core.Crawling;
 using CluedIn.Crawling.Dynamics365.Core;
-using Should;
+using Shouldly;
 using Xunit;
 
 namespace CluedIn.Provider.Dynamics365.Unit.Test.Dynamics365Provider
@@ -26,7 +26,7 @@ namespace CluedIn.Provider.Dynamics365.Unit.Test.Dynamics365Provider
 
             ((ArgumentNullException)ex.InnerExceptions.Single())
                 .ParamName
-                .ShouldEqual("jobData");
+                .ShouldBe("jobData");
         }
 
         [Theory]
@@ -42,7 +42,7 @@ namespace CluedIn.Provider.Dynamics365.Unit.Test.Dynamics365Provider
 
 
         [Theory]
-        [InlineAutoData("Url", "Url", "some-value")]
+        [InlineAutoData("ApiKey", "ApiKey", "some-value")]
         // TODO add data for other properties that need populating
         // Fill in the values for expected results ....
         public void Returns_Expected_Data(string key, string propertyName, object expectedValue, Guid organizationId, Guid userId, Guid providerDefinitionId) // TODO add additional parameters to populate CrawlJobData instance
@@ -59,7 +59,7 @@ namespace CluedIn.Provider.Dynamics365.Unit.Test.Dynamics365Provider
                     $"{key} not found in results");
 
             result[key]
-                .ShouldEqual(expectedValue);
+                .ShouldBe(expectedValue);
         }
     }
 }

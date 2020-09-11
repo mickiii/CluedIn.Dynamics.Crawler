@@ -9,7 +9,7 @@ namespace CluedIn.Crawling.Dynamics365.Integration.Test
     {
       return new Dictionary<string, object>
             {
-                { Dynamics365Constants.KeyName.Url, "demo" }
+                { Dynamics365Constants.KeyName.ApiKey, "demo" }
             };
     }
   }

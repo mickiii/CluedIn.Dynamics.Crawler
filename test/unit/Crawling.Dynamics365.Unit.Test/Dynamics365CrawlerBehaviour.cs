@@ -3,7 +3,7 @@ using CluedIn.Crawling;
 using CluedIn.Crawling.Dynamics365;
 using CluedIn.Crawling.Dynamics365.Infrastructure.Factories;
 using Moq;
-using Should;
+using Shouldly;
 using Xunit;
 
 namespace Crawling.Dynamics365.Unit.Test

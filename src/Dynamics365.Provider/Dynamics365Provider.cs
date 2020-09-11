@@ -1,18 +1,18 @@
 using System;
 using System.Collections.Generic;
-using System.Configuration;
-using System.Linq;
 using System.Threading.Tasks;
+
 using CluedIn.Core;
-using CluedIn.Core.Configuration;
 using CluedIn.Core.Crawling;
 using CluedIn.Core.Data.Relational;
 using CluedIn.Core.Providers;
 using CluedIn.Core.Webhooks;
+using System.Configuration;
+using System.Linq;
+using CluedIn.Core.Configuration;
 using CluedIn.Crawling.Dynamics365.Core;
 using CluedIn.Crawling.Dynamics365.Infrastructure.Factories;
 using CluedIn.Providers.Models;
-using Microsoft.IdentityModel.Clients.ActiveDirectory;
 using Newtonsoft.Json;
 
 namespace CluedIn.Provider.Dynamics365
@@ -38,32 +38,8 @@ namespace CluedIn.Provider.Dynamics365
                 throw new ArgumentNullException(nameof(configuration));
 
             var dynamics365CrawlJobData = new Dynamics365CrawlJobData();
-            if (configuration.ContainsKey(Dynamics365Constants.KeyName.Url))
-            { dynamics365CrawlJobData.Url = configuration[Dynamics365Constants.KeyName.Url].ToString(); }
-            if (configuration.ContainsKey(Dynamics365Constants.KeyName.DeltaCrawlEnabled))
-            { dynamics365CrawlJobData.DeltaCrawlEnabled = bool.Parse(configuration[Dynamics365Constants.KeyName.DeltaCrawlEnabled].ToString()); }
-            if (configuration.ContainsKey(Dynamics365Constants.KeyName.UserName))
-            { dynamics365CrawlJobData.UserName = configuration[Dynamics365Constants.KeyName.UserName].ToString(); }
-            if (configuration.ContainsKey(Dynamics365Constants.KeyName.Password))
-            { dynamics365CrawlJobData.Password = configuration[Dynamics365Constants.KeyName.Password].ToString(); }
-            dynamics365CrawlJobData.ClientId = ConfigurationManager.AppSettings.GetValue<string>("Providers.Dynamics365ClientId", null);
-            dynamics365CrawlJobData.ClientSecret = ConfigurationManager.AppSettings.GetValue<string>("Providers.Dynamics365ClientSecret", null);
-
-            string apiVersion = "9.1";
-            string webApiUrl = $"{dynamics365CrawlJobData.Url}/api/data/v{apiVersion}/";
-
-            if (dynamics365CrawlJobData.UserName != null && dynamics365CrawlJobData.Password != null)
-            {
-                Crawling.Dynamics365.Infrastructure.Dynamics365Client.RefreshToken(dynamics365CrawlJobData);
-            }
-            else
-            {
-                var clientCredential = new ClientCredential(dynamics365CrawlJobData.ClientId, dynamics365CrawlJobData.ClientSecret);
-                var authParameters = await AuthenticationParameters.CreateFromResourceUrlAsync(new Uri(webApiUrl));
-                var authContext = new AuthenticationContext(authParameters.Authority);
-                var authResult = authContext.AcquireTokenAsync(authParameters.Resource, clientCredential).Result;
-                dynamics365CrawlJobData.TargetApiKey = authResult.AccessToken;
-            }
+            if (configuration.ContainsKey(Dynamics365Constants.KeyName.ApiKey))
+            { dynamics365CrawlJobData.ApiKey = configuration[Dynamics365Constants.KeyName.ApiKey].ToString(); }
 
             return await Task.FromResult(dynamics365CrawlJobData);
         }
@@ -99,7 +75,7 @@ namespace CluedIn.Provider.Dynamics365
             {
                 //TODO add the transformations from specific CrawlJobData object to dictionary
                 // add tests to GetHelperConfigurationBehaviour.cs
-                dictionary.Add(Dynamics365Constants.KeyName.Url, dynamics365CrawlJobData.Url);
+                dictionary.Add(Dynamics365Constants.KeyName.ApiKey, dynamics365CrawlJobData.ApiKey);
             }
 
             return await Task.FromResult(dictionary);

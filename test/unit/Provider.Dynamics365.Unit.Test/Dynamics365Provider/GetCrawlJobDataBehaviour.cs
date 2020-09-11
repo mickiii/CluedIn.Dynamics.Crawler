@@ -28,7 +28,7 @@ namespace CluedIn.Provider.Dynamics365.Unit.Test.Dynamics365Provider
         }
 
         [Theory]
-        [InlineAutoData(Dynamics365Constants.KeyName.Url, nameof(Dynamics365CrawlJobData.Url))]
+        [InlineAutoData(Dynamics365Constants.KeyName.ApiKey, nameof(Dynamics365CrawlJobData.ApiKey))]
         public async Task InitializesProperties(string key, string propertyName, string sampleValue, Guid organizationId, Guid userId, Guid providerDefinitionId)
         {
             var dictionary = new Dictionary<string, object>()
