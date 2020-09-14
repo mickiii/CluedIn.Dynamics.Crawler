@@ -3,16 +3,9 @@ using Castle.MicroKernel.Registration;
 using CluedIn.Core;
 using CluedIn.Core.Providers;
 using CluedIn.Core.Server;
-// 
-using CluedIn.Core.Webhooks;
-// 
 using CluedIn.Crawling.Dynamics365.Core;
 using CluedIn.Crawling.Dynamics365.Infrastructure.Installers;
-// 
-using CluedIn.Provider.Dynamics365.WebApi;
-// 
 using ComponentHost;
-using CluedIn.Core.Server;
 
 namespace CluedIn.Provider.Dynamics365
 {

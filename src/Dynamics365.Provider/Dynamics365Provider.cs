@@ -15,6 +15,7 @@ using CluedIn.Crawling.Dynamics365.Infrastructure.Factories;
 using CluedIn.Crawling.Dynamics365.Infrastructure;
 using CluedIn.Providers.Models;
 using Newtonsoft.Json;
+using Microsoft.IdentityModel.Clients.ActiveDirectory;
 
 namespace CluedIn.Provider.Dynamics365
 {
