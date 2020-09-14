@@ -683,7 +683,6 @@ namespace CluedIn.Crawling.Dynamics365.Core.Models
         [JsonProperty("teamsfollowed")]
         public long? TeamsFollowed { get; set; }
 
-
     }
 }
 
