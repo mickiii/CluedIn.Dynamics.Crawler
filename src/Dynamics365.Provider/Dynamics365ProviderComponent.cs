@@ -2,6 +2,7 @@ using Castle.MicroKernel.Registration;
 
 using CluedIn.Core;
 using CluedIn.Core.Providers;
+using CluedIn.Core.Server;
 // 
 using CluedIn.Core.Webhooks;
 // 
@@ -30,16 +31,9 @@ namespace CluedIn.Provider.Dynamics365
         {
             Container.Install(new InstallComponents());
             var asm = System.Reflection.Assembly.GetExecutingAssembly();
+
             Container.Register(Types.FromAssembly(asm).BasedOn<IProvider>().WithServiceFromInterface().If(t => !t.IsAbstract).LifestyleSingleton());
             Container.Register(Types.FromAssembly(asm).BasedOn<IEntityActionBuilder>().WithServiceFromInterface().If(t => !t.IsAbstract).LifestyleSingleton());
-
-            Container.Register(Types.FromAssembly(asm).BasedOn<IWebhookProcessor>().WithServiceFromInterface().If(t => !t.IsAbstract).LifestyleSingleton());
-            Container.Register(Types.FromAssembly(asm).BasedOn<IWebhookPrevalidator>().WithServiceFromInterface().If(t => !t.IsAbstract).LifestyleSingleton());
-
-
-            Container.Register(Component.For<Dynamics365Controller>().UsingFactoryMethod(() => new Dynamics365Controller(this)).LifestyleScoped());
-            Container.Register(Component.For<Dynamics365OAuthController>().UsingFactoryMethod(() => new Dynamics365OAuthController(this)).LifestyleScoped());
-
 
             State = ServiceState.Started;
         }

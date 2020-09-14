@@ -12,6 +12,7 @@ using System.Linq;
 using CluedIn.Core.Configuration;
 using CluedIn.Crawling.Dynamics365.Core;
 using CluedIn.Crawling.Dynamics365.Infrastructure.Factories;
+using CluedIn.Crawling.Dynamics365.Infrastructure;
 using CluedIn.Providers.Models;
 using Newtonsoft.Json;
 
@@ -38,8 +39,42 @@ namespace CluedIn.Provider.Dynamics365
                 throw new ArgumentNullException(nameof(configuration));
 
             var dynamics365CrawlJobData = new Dynamics365CrawlJobData();
-            if (configuration.ContainsKey(Dynamics365Constants.KeyName.ApiKey))
-            { dynamics365CrawlJobData.ApiKey = configuration[Dynamics365Constants.KeyName.ApiKey].ToString(); }
+            if (configuration.ContainsKey(Dynamics365Constants.KeyName.Url))
+            { dynamics365CrawlJobData.Url = configuration[Dynamics365Constants.KeyName.Url].ToString(); }
+            if (configuration.ContainsKey(Dynamics365Constants.KeyName.DeltaCrawlEnabled))
+            { dynamics365CrawlJobData.DeltaCrawlEnabled = bool.Parse(configuration[Dynamics365Constants.KeyName.DeltaCrawlEnabled].ToString()); }
+            if (configuration.ContainsKey(Dynamics365Constants.KeyName.UserName))
+            { dynamics365CrawlJobData.UserName = configuration[Dynamics365Constants.KeyName.UserName].ToString(); }
+            if (configuration.ContainsKey(Dynamics365Constants.KeyName.Password))
+            { dynamics365CrawlJobData.Password = configuration[Dynamics365Constants.KeyName.Password].ToString(); }
+
+            var fallbackClientId = "clientId";
+            var fallbackClientSecret = "clientSecret";
+            dynamics365CrawlJobData.ClientId = ConfigurationManager.AppSettings.GetValue<string>("Providers.Dynamics365ClientId", fallbackClientId);
+            dynamics365CrawlJobData.ClientSecret = ConfigurationManager.AppSettings.GetValue<string>("Providers.Dynamics365ClientSecret", fallbackClientSecret);
+
+            string apiVersion = "9.1";
+            string webApiUrl = $"{dynamics365CrawlJobData.Url}/api/data/v{apiVersion}/";
+
+            try
+            {
+                if (dynamics365CrawlJobData.UserName != null && dynamics365CrawlJobData.Password != null)
+                {
+                    Dynamics365Client.RefreshToken(dynamics365CrawlJobData);
+                }
+                else
+                {
+                    var clientCredential = new ClientCredential(dynamics365CrawlJobData.ClientId, dynamics365CrawlJobData.ClientSecret);
+                    var authParameters = await AuthenticationParameters.CreateFromUrlAsync(new Uri(webApiUrl));
+                    var authContext = new AuthenticationContext(authParameters.Authority);
+                    var authResult = authContext.AcquireTokenAsync(authParameters.Resource, clientCredential).Result;
+                    dynamics365CrawlJobData.TargetApiKey = authResult.AccessToken;
+                }
+            }
+            catch
+            {
+                throw new Exception("Unable to fetch token");
+            }
 
             return await Task.FromResult(dynamics365CrawlJobData);
         }

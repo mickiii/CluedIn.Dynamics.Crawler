@@ -1,7 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-  <ItemGroup>
-    <None Remove="ClueProducers\readme.md" />
-  </ItemGroup>
+<Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
     <ProjectReference Include="..\Dynamics365.Infrastructure\Crawling.Dynamics365.Infrastructure.csproj" />
   </ItemGroup>

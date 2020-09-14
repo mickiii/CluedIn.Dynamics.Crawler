@@ -37,5 +37,7 @@
     <PackageReference Update="CluedIn.Server.Common.WebApi" Version="$(_CluedIn)" />
     <PackageReference Update="CluedIn.Agent" Version="$(_CluedIn)" />
 
+    <PackageReference Include="Microsoft.IdentityModel.Clients.ActiveDirectory" Version="5.2.8" />
+
   </ItemGroup>
 </Project>

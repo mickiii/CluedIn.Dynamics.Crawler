@@ -10,6 +10,12 @@ namespace CluedIn.Crawling.Dynamics365.Core
         public struct KeyName
         {
             public const string ApiKey = nameof(ApiKey);
+            public const string Url = nameof(Url);
+            public const string DeltaCrawlEnabled = nameof(DeltaCrawlEnabled);
+            public const string UserName = nameof(UserName);
+            public const string Password = nameof(Password);
+            public const string ClientId = nameof(ClientId);
+            public const string ClientSecret = nameof(ClientSecret);
         }
 
         // TODO Complete the following section
