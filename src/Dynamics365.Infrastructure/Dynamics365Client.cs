@@ -6,6 +6,7 @@ using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using CluedIn.Core.Providers;
 using CluedIn.Crawling.Dynamics365.Core;
+using CluedIn.Crawling.Dynamics365.Core.Models;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Clients.ActiveDirectory;
 using Newtonsoft.Json;
