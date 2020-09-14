@@ -31,14 +31,36 @@ namespace CluedIn.Crawling.Dynamics365.Core
         {
             token = new Control[]
             {
-        // You can define controls to show in the GUI in order to authenticate with this integration
-        //        new Control()
-        //        {
-        //            displayName = "API key",
-        //            isRequired = false,
-        //            name = "api",
-        //            type = "text"
-        //        }
+                new Control()
+                {
+                    displayName = "ClientCredentials",
+                    isRequired = true,
+                    name = "ClientCredentials",
+                    type = "text"
+                }
+            },
+            credentials = new Control[]
+            {
+                new Control()
+                {
+                    displayName = "UserCredential - userName",
+                    isRequired = true,
+                    name = "userName",
+                    type = "text"
+                },
+                new Control()
+                {
+                    displayName = "UserCredential - password",
+                    isRequired = true,
+                    name = "password",
+                    type = "text"
+                }
+            },
+            oauth = new OAuth()
+            {
+                initial = "",
+                callback = "",
+                oauthCallBackKey = ""
             }
         };
 
@@ -59,10 +81,9 @@ namespace CluedIn.Crawling.Dynamics365.Core
         public static readonly Guid ProviderId = Guid.Parse("1f93371f-7e58-40fd-8ac4-f54b0a93ec64");
         public const string ProviderName = "Dynamics365";
 
-        
+
         public const string ClientID = "";
         public const string ClientSecret = "";
-        
 
 
         public static readonly ComponentEmailDetails ComponentEmailDetails = new ComponentEmailDetails
