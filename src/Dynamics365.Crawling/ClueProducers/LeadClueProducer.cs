@@ -328,6 +328,13 @@ namespace CluedIn.Crawling.Dynamics365.ClueProducers
             data.Properties[vocab.BusinessCard] = input.BusinessCard.PrintIfAvailable();
             data.Properties[vocab.BusinessCardAttributes] = input.BusinessCardAttributes.PrintIfAvailable();
 
+            // Add custom fields
+            foreach (var key in input.Custom.Keys)
+            {
+                var customVocab = $"{vocab.KeyPrefix}{vocab.KeySeparator}{key}";
+                data.Properties[customVocab] = input.Custom[key].PrintIfAvailable();
+            }
+
             this.Customize(clue, input);
 
             if (!data.OutgoingEdges.Any())

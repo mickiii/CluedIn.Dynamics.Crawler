@@ -343,6 +343,13 @@ namespace CluedIn.Crawling.Dynamics365.ClueProducers
             data.Properties[vocab.MarketingOnlyName] = input.MarketingOnlyName.PrintIfAvailable();
             data.Properties[vocab.TeamsFollowed] = input.TeamsFollowed.PrintIfAvailable();
 
+            // Add custom fields
+            foreach (var key in input.Custom.Keys)
+            {
+                var customVocab = $"{vocab.KeyPrefix}{vocab.KeySeparator}{key}";
+                data.Properties[customVocab] = input.Custom[key].PrintIfAvailable();
+            }
+
             Customize(clue, input);
 
             if (!data.OutgoingEdges.Any())

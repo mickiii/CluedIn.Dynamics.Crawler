@@ -405,6 +405,13 @@ namespace CluedIn.Crawling.Dynamics365.ClueProducers
             data.Properties[vocab.IsDraft] = input.IsDraft.PrintIfAvailable();
             data.Properties[vocab.IsDraftName] = input.IsDraftName.PrintIfAvailable();
 
+            // Add custom fields
+            foreach (var key in input.Custom.Keys)
+            {
+                var customVocab = $"{vocab.KeyPrefix}{vocab.KeySeparator}{key}";
+                data.Properties[customVocab] = input.Custom[key].PrintIfAvailable();
+            }
+
             this.Customize(clue, input);
 
             if (!data.OutgoingEdges.Any())

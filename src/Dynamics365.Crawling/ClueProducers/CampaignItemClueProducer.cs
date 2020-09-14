@@ -43,6 +43,15 @@ namespace CluedIn.Crawling.Dynamics365.ClueProducers
 
             data.Name = input.Name;
 
+            if (input.EntityId != null)
+                _factory.CreateOutgoingEntityReference(clue, EntityType.Unknown, EntityEdgeType.AttachedTo, input, input.EntityId.ToString());
+
+            if (input.OwningUser != null)
+                _factory.CreateOutgoingEntityReference(clue, EntityType.Infrastructure.User, EntityEdgeType.OwnedBy, input, input.OwningUser.ToString());
+
+            if (input.OwningBusinessUnit != null)
+                _factory.CreateOutgoingEntityReference(clue, EntityType.Organization.Unit, EntityEdgeType.OwnedBy, input, input.OwningBusinessUnit.ToString());
+
             var vocab = new CampaignItemVocabulary();
 
             data.Properties[vocab.CampaignItemId] = input.CampaignItemId.PrintIfAvailable();
@@ -56,6 +65,13 @@ namespace CluedIn.Crawling.Dynamics365.ClueProducers
             data.Properties[vocab.TimezoneRuleVersionNumber] = input.TimezoneRuleVersionNumber.PrintIfAvailable();
             data.Properties[vocab.UtcConversionTimezoneCode] = input.UtcConversionTimezoneCode.PrintIfAvailable();
             data.Properties[vocab.VersionNumber] = input.VersionNumber.PrintIfAvailable();
+
+            // Add custom fields
+            foreach (var key in input.Custom.Keys)
+            {
+                var customVocab = $"{vocab.KeyPrefix}{vocab.KeySeparator}{key}";
+                data.Properties[customVocab] = input.Custom[key].PrintIfAvailable();
+            }
 
             Customize(clue, input);
 
