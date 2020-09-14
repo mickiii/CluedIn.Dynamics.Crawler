@@ -1,14 +1,15 @@
 using System;
+using System.Collections.Generic;
 using System.Net;
+using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using CluedIn.Core.Providers;
 using CluedIn.Crawling.Dynamics365.Core;
-using CluedIn.Crawling.Dynamics365.Core.Models;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Clients.ActiveDirectory;
 using Newtonsoft.Json;
 using RestSharp;
-using Microsoft.Extensions.Logging;
 
 namespace CluedIn.Crawling.Dynamics365.Infrastructure
 {

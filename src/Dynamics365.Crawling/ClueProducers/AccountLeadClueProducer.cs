@@ -45,7 +45,7 @@ namespace CluedIn.Crawling.Dynamics365.ClueProducers
 
             var data = clue.Data.EntityData;
 
-            if (Uri.TryCreate(string.Format("{0}/main.aspx?pagetype=entityrecord&etn=accountlead&id={1}", _dynamics365CrawlJobData.Api, input.AccountLeadId.ToString()), UriKind.Absolute, out Uri uri))
+            if (Uri.TryCreate(string.Format("{0}/main.aspx?pagetype=entityrecord&etn=accountlead&id={1}", _dynamics365CrawlJobData.Url, input.AccountLeadId.ToString()), UriKind.Absolute, out Uri uri))
                 data.Uri = uri;
 
             data.Name = input.Name;
