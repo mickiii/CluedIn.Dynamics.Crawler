@@ -10,7 +10,6 @@ using RuleConstants = CluedIn.Core.Constants.Validation.Rules;
 
 namespace CluedIn.Crawling.Dynamics365.ClueProducers
 {
-
     public abstract class DynamicsClueProducer<T> : BaseClueProducer<T>
     {
         public abstract void Customize(Clue clue, T input);

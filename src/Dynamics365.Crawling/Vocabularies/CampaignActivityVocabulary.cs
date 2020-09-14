@@ -213,7 +213,7 @@ namespace CluedIn.Crawling.Dynamics365.Vocabularies
                     .WithDisplayName("Scheduled Start")
                     .ModelProperty("scheduledstart", typeof(DateTime)));
 
-                this.from = group.Add(new VocabularyKey("from", VocabularyKeyDataType.Text, VocabularyKeyVisibility.Visible)
+                this.From = group.Add(new VocabularyKey("from", VocabularyKeyDataType.Text, VocabularyKeyVisibility.Visible)
                     .WithDataAnnotations(k => k.NotEditable())
                     .WithDescription(@"For system use only.")
                     .WithDisplayName("From")
@@ -754,7 +754,7 @@ namespace CluedIn.Crawling.Dynamics365.Vocabularies
 
         public VocabularyKey ScheduledStart { get; private set; }
 
-        public VocabularyKey from { get; private set; }
+        public VocabularyKey From { get; private set; }
 
         public VocabularyKey OwningUser { get; private set; }
 

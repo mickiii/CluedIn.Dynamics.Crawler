@@ -166,40 +166,42 @@ namespace CluedIn.Crawling.Dynamics365.ClueProducers
                          if (input.ActivityId != null)
                             _factory.CreateOutgoingEntityReference(clue, EntityType.email, EntityEdgeType.Parent, input, input.ActivityId);
 
-
             */
-            data.Properties[Dynamics365Vocabulary.ActivityParty.ActivityId] = input.ActivityId.PrintIfAvailable();
-            data.Properties[Dynamics365Vocabulary.ActivityParty.ActivityPartyId] = input.ActivityPartyId.PrintIfAvailable();
-            data.Properties[Dynamics365Vocabulary.ActivityParty.PartyId] = input.PartyId.PrintIfAvailable();
-            data.Properties[Dynamics365Vocabulary.ActivityParty.PartyObjectTypeCode] = input.PartyObjectTypeCode.PrintIfAvailable();
-            data.Properties[Dynamics365Vocabulary.ActivityParty.ParticipationTypeMask] = input.ParticipationTypeMask.PrintIfAvailable();
-            data.Properties[Dynamics365Vocabulary.ActivityParty.AddressUsed] = input.AddressUsed.PrintIfAvailable();
-            data.Properties[Dynamics365Vocabulary.ActivityParty.PartyIdName] = input.PartyIdName.PrintIfAvailable();
-            data.Properties[Dynamics365Vocabulary.ActivityParty.OwningBusinessUnit] = input.OwningBusinessUnit.PrintIfAvailable();
-            data.Properties[Dynamics365Vocabulary.ActivityParty.DoNotFax] = input.DoNotFax.PrintIfAvailable();
-            data.Properties[Dynamics365Vocabulary.ActivityParty.ScheduledStart] = input.ScheduledStart.PrintIfAvailable();
-            data.Properties[Dynamics365Vocabulary.ActivityParty.ScheduledEnd] = input.ScheduledEnd.PrintIfAvailable();
-            data.Properties[Dynamics365Vocabulary.ActivityParty.Effort] = input.Effort.PrintIfAvailable();
-            data.Properties[Dynamics365Vocabulary.ActivityParty.DoNotEmail] = input.DoNotEmail.PrintIfAvailable();
-            data.Properties[Dynamics365Vocabulary.ActivityParty.OwningUser] = input.OwningUser.PrintIfAvailable();
-            data.Properties[Dynamics365Vocabulary.ActivityParty.ExchangeEntryId] = input.ExchangeEntryId.PrintIfAvailable();
-            data.Properties[Dynamics365Vocabulary.ActivityParty.ResourceSpecId] = input.ResourceSpecId.PrintIfAvailable();
-            data.Properties[Dynamics365Vocabulary.ActivityParty.VersionNumber] = input.VersionNumber.PrintIfAvailable();
-            data.Properties[Dynamics365Vocabulary.ActivityParty.ResourceSpecIdName] = input.ResourceSpecIdName.PrintIfAvailable();
-            data.Properties[Dynamics365Vocabulary.ActivityParty.DoNotFaxName] = input.DoNotFaxName.PrintIfAvailable();
-            data.Properties[Dynamics365Vocabulary.ActivityParty.DoNotEmailName] = input.DoNotEmailName.PrintIfAvailable();
-            data.Properties[Dynamics365Vocabulary.ActivityParty.ParticipationTypeMaskName] = input.ParticipationTypeMaskName.PrintIfAvailable();
-            data.Properties[Dynamics365Vocabulary.ActivityParty.DoNotPostalMail] = input.DoNotPostalMail.PrintIfAvailable();
-            data.Properties[Dynamics365Vocabulary.ActivityParty.DoNotPhone] = input.DoNotPhone.PrintIfAvailable();
-            data.Properties[Dynamics365Vocabulary.ActivityParty.DoNotPhoneName] = input.DoNotPhoneName.PrintIfAvailable();
-            data.Properties[Dynamics365Vocabulary.ActivityParty.DoNotPostalMailName] = input.DoNotPostalMailName.PrintIfAvailable();
-            data.Properties[Dynamics365Vocabulary.ActivityParty.OwnerId] = input.OwnerId.PrintIfAvailable();
-            data.Properties[Dynamics365Vocabulary.ActivityParty.OwnerIdType] = input.OwnerIdType.PrintIfAvailable();
-            data.Properties[Dynamics365Vocabulary.ActivityParty.InstanceTypeCode] = input.InstanceTypeCode.PrintIfAvailable();
-            data.Properties[Dynamics365Vocabulary.ActivityParty.InstanceTypeCodeName] = input.InstanceTypeCodeName.PrintIfAvailable();
-            data.Properties[Dynamics365Vocabulary.ActivityParty.IsPartyDeleted] = input.IsPartyDeleted.PrintIfAvailable();
-            data.Properties[Dynamics365Vocabulary.ActivityParty.IsPartyDeletedName] = input.IsPartyDeletedName.PrintIfAvailable();
-            data.Properties[Dynamics365Vocabulary.ActivityParty.AddressUsedEmailColumnNumber] = input.AddressUsedEmailColumnNumber.PrintIfAvailable();
+
+            var vocab = new ActivityPartyVocabulary();
+
+            data.Properties[vocab.ActivityId] = input.ActivityId.PrintIfAvailable();
+            data.Properties[vocab.ActivityPartyId] = input.ActivityPartyId.PrintIfAvailable();
+            data.Properties[vocab.PartyId] = input.PartyId.PrintIfAvailable();
+            data.Properties[vocab.PartyObjectTypeCode] = input.PartyObjectTypeCode.PrintIfAvailable();
+            data.Properties[vocab.ParticipationTypeMask] = input.ParticipationTypeMask.PrintIfAvailable();
+            data.Properties[vocab.AddressUsed] = input.AddressUsed.PrintIfAvailable();
+            data.Properties[vocab.PartyIdName] = input.PartyIdName.PrintIfAvailable();
+            data.Properties[vocab.OwningBusinessUnit] = input.OwningBusinessUnit.PrintIfAvailable();
+            data.Properties[vocab.DoNotFax] = input.DoNotFax.PrintIfAvailable();
+            data.Properties[vocab.ScheduledStart] = input.ScheduledStart.PrintIfAvailable();
+            data.Properties[vocab.ScheduledEnd] = input.ScheduledEnd.PrintIfAvailable();
+            data.Properties[vocab.Effort] = input.Effort.PrintIfAvailable();
+            data.Properties[vocab.DoNotEmail] = input.DoNotEmail.PrintIfAvailable();
+            data.Properties[vocab.OwningUser] = input.OwningUser.PrintIfAvailable();
+            data.Properties[vocab.ExchangeEntryId] = input.ExchangeEntryId.PrintIfAvailable();
+            data.Properties[vocab.ResourceSpecId] = input.ResourceSpecId.PrintIfAvailable();
+            data.Properties[vocab.VersionNumber] = input.VersionNumber.PrintIfAvailable();
+            data.Properties[vocab.ResourceSpecIdName] = input.ResourceSpecIdName.PrintIfAvailable();
+            data.Properties[vocab.DoNotFaxName] = input.DoNotFaxName.PrintIfAvailable();
+            data.Properties[vocab.DoNotEmailName] = input.DoNotEmailName.PrintIfAvailable();
+            data.Properties[vocab.ParticipationTypeMaskName] = input.ParticipationTypeMaskName.PrintIfAvailable();
+            data.Properties[vocab.DoNotPostalMail] = input.DoNotPostalMail.PrintIfAvailable();
+            data.Properties[vocab.DoNotPhone] = input.DoNotPhone.PrintIfAvailable();
+            data.Properties[vocab.DoNotPhoneName] = input.DoNotPhoneName.PrintIfAvailable();
+            data.Properties[vocab.DoNotPostalMailName] = input.DoNotPostalMailName.PrintIfAvailable();
+            data.Properties[vocab.OwnerId] = input.OwnerId.PrintIfAvailable();
+            data.Properties[vocab.OwnerIdType] = input.OwnerIdType.PrintIfAvailable();
+            data.Properties[vocab.InstanceTypeCode] = input.InstanceTypeCode.PrintIfAvailable();
+            data.Properties[vocab.InstanceTypeCodeName] = input.InstanceTypeCodeName.PrintIfAvailable();
+            data.Properties[vocab.IsPartyDeleted] = input.IsPartyDeleted.PrintIfAvailable();
+            data.Properties[vocab.IsPartyDeletedName] = input.IsPartyDeletedName.PrintIfAvailable();
+            data.Properties[vocab.AddressUsedEmailColumnNumber] = input.AddressUsedEmailColumnNumber.PrintIfAvailable();
 
             this.Customize(clue, input);
 
