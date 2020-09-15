@@ -94,7 +94,7 @@ namespace CluedIn.Crawling.Dynamics365.Infrastructure
             }
         }
 
-        public IEnumerable<T> Get<T>(string value, Dynamics365CrawlJobData dynamics365CrawlJobData)
+        public IEnumerable<T> Get<T>(string endpoint, Dynamics365CrawlJobData dynamics365CrawlJobData)
         {
             DateTimeOffset lastCrawlFinishTime;
             if (_dynamics365CrawlJobData.LastCrawlFinishTime == DateTimeOffset.Parse("1/1/0001 12:00:00 AM +00:00"))
@@ -108,58 +108,59 @@ namespace CluedIn.Crawling.Dynamics365.Infrastructure
 
             var filter = $"(createdon ge {lastCrawlFinishTime:yyyy-MM-ddThh:mm:ssZ} or modifiedon ge {lastCrawlFinishTime:yyyy-MM-ddThh:mm:ssZ})";
 
-            var url = _dynamics365CrawlJobData.Url;
-
+            string url;
             if (_dynamics365CrawlJobData.DeltaCrawlEnabled)
             {
-                url = _dynamics365CrawlJobData.Url + string.Format("/api/data/v9.1/{0}?$filter={1}", value, filter);
+                url = _dynamics365CrawlJobData.Url + string.Format("/api/data/v9.1/{0}?$filter={1}", endpoint, filter);
+            }
+            else
+            {
+                url = _dynamics365CrawlJobData.Url + string.Format("/api/data/v9.1/{0}", endpoint);
             }
 
             ResultList<T> resultList = null;
             while (true)
             {
-                using (HttpClient httpClient = new HttpClient())
+                using HttpClient httpClient = new HttpClient();
+                try
                 {
-                    try
+                    httpClient.Timeout = new TimeSpan(0, 2, 0);
+                    httpClient.DefaultRequestHeaders.Add("Prefer", "odata.maxpagesize=100");
+                    httpClient.DefaultRequestHeaders.Add("OData-MaxVersion", "4.0");
+                    httpClient.DefaultRequestHeaders.Add("OData-Version", "4.0");
+                    httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                    httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", dynamics365CrawlJobData.TargetApiKey);
+                    HttpResponseMessage responseMessage = httpClient.GetAsync(url).Result;
+                    var content = responseMessage.Content.ReadAsStringAsync().Result;
+                    if (responseMessage.StatusCode == HttpStatusCode.Unauthorized)
                     {
-                        httpClient.Timeout = new TimeSpan(0, 2, 0);
-                        httpClient.DefaultRequestHeaders.Add("Prefer", "odata.maxpagesize=100");
-                        httpClient.DefaultRequestHeaders.Add("OData-MaxVersion", "4.0");
-                        httpClient.DefaultRequestHeaders.Add("OData-Version", "4.0");
-                        httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                        httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", dynamics365CrawlJobData.ApiKey);
-                        HttpResponseMessage responseMessage = httpClient.GetAsync(url).Result;
-                        var content = responseMessage.Content.ReadAsStringAsync().Result;
-                        if (responseMessage.StatusCode == HttpStatusCode.Unauthorized)
-                        {
-                            RefreshToken(dynamics365CrawlJobData);
-                            continue;
-                        }
-                        else if (responseMessage.StatusCode != HttpStatusCode.OK)
-                        {
-                            _log.LogError("Connection failed " + responseMessage.StatusCode);
-                        }
-                        resultList = JsonConvert.DeserializeObject<ResultList<T>>(content, new JsonSerializerSettings() { NullValueHandling = NullValueHandling.Ignore });
+                        RefreshToken(dynamics365CrawlJobData);
+                        continue;
                     }
-                    catch (Exception e)
+                    else if (responseMessage.StatusCode != HttpStatusCode.OK)
                     {
-                        _log.LogError(e.Message);
+                        _log.LogError("Connection failed " + responseMessage.StatusCode);
                     }
+                    resultList = JsonConvert.DeserializeObject<ResultList<T>>(content, new JsonSerializerSettings() { NullValueHandling = NullValueHandling.Ignore });
+                }
+                catch (Exception e)
+                {
+                    _log.LogError(e.Message);
+                }
 
 
-                    if (resultList?.Value != null)
-                    {
-                        foreach (var item in resultList.Value)
-                            yield return item;
-                    }
-                    else
-                    {
-                        break;
-                    }
-                    if (resultList.NextLink == null)
-                    {
-                        break;
-                    }
+                if (resultList?.Value != null)
+                {
+                    foreach (var item in resultList.Value)
+                        yield return item;
+                }
+                else
+                {
+                    break;
+                }
+                if (resultList.NextLink == null)
+                {
+                    break;
                 }
             }
         }

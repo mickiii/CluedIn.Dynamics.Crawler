@@ -13,5 +13,6 @@
     <PackageReference Include="CluedIn.Core.Agent" />
     <PackageReference Include="CluedIn.Server.Common.WebApi" />
     <PackageReference Include="CluedIn.Agent" />
+    <PackageReference Include="Microsoft.IdentityModel.Clients.ActiveDirectory" />
   </ItemGroup>
 </Project>

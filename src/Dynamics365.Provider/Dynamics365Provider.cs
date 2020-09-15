@@ -49,10 +49,23 @@ namespace CluedIn.Provider.Dynamics365
             if (configuration.ContainsKey(Dynamics365Constants.KeyName.Password))
             { dynamics365CrawlJobData.Password = configuration[Dynamics365Constants.KeyName.Password].ToString(); }
 
-            var fallbackClientId = "clientId";
-            var fallbackClientSecret = "clientSecret";
-            dynamics365CrawlJobData.ClientId = ConfigurationManager.AppSettings.GetValue<string>("Providers.Dynamics365ClientId", fallbackClientId);
-            dynamics365CrawlJobData.ClientSecret = ConfigurationManager.AppSettings.GetValue<string>("Providers.Dynamics365ClientSecret", fallbackClientSecret);
+            if (configuration.ContainsKey(Dynamics365Constants.KeyName.ClientId))
+            {
+                dynamics365CrawlJobData.ClientId = configuration[Dynamics365Constants.KeyName.ClientId].ToString();
+            }
+            else
+            {
+                dynamics365CrawlJobData.ClientId = ConfigurationManager.AppSettings.GetValue<string>("Providers.Dynamics365ClientId", null);
+            }
+
+            if (configuration.ContainsKey(Dynamics365Constants.KeyName.ClientSecret))
+            {
+                dynamics365CrawlJobData.ClientSecret = configuration[Dynamics365Constants.KeyName.ClientSecret].ToString();
+            }
+            else
+            {
+                dynamics365CrawlJobData.ClientSecret = ConfigurationManager.AppSettings.GetValue<string>("Providers.Dynamics365ClientSecret", null);            
+            }
 
             string apiVersion = "9.1";
             string webApiUrl = $"{dynamics365CrawlJobData.Url}/api/data/v{apiVersion}/";
@@ -65,16 +78,19 @@ namespace CluedIn.Provider.Dynamics365
                 }
                 else
                 {
+                    var authenticationParameters = await AuthenticationParameters.CreateFromUrlAsync(new Uri(webApiUrl));
+                    //Workaround. Current version of AD library creates a wrong authority
+                    authenticationParameters.Authority = authenticationParameters.Authority.Substring(0, authenticationParameters.Authority.Length - 16);
+                    AuthenticationContext authenticationContext = new AuthenticationContext(authenticationParameters.Authority);
                     var clientCredential = new ClientCredential(dynamics365CrawlJobData.ClientId, dynamics365CrawlJobData.ClientSecret);
-                    var authParameters = await AuthenticationParameters.CreateFromUrlAsync(new Uri(webApiUrl));
-                    var authContext = new AuthenticationContext(authParameters.Authority);
-                    var authResult = authContext.AcquireTokenAsync(authParameters.Resource, clientCredential).Result;
-                    dynamics365CrawlJobData.TargetApiKey = authResult.AccessToken;
+                    var result = await authenticationContext.AcquireTokenAsync(authenticationParameters.Resource, clientCredential);
+
+                    dynamics365CrawlJobData.TargetApiKey = result.AccessToken;
                 }
             }
-            catch
+            catch (Exception e)
             {
-                throw new Exception("Unable to fetch token");
+                throw e;
             }
 
             return await Task.FromResult(dynamics365CrawlJobData);
