@@ -7,9 +7,11 @@ using System.Threading.Tasks;
 using CluedIn.Core.Providers;
 using CluedIn.Crawling.Dynamics365.Core;
 using CluedIn.Crawling.Dynamics365.Core.Models;
+using Microsoft.EntityFrameworkCore.Internal;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Clients.ActiveDirectory;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using RestSharp;
 
 namespace CluedIn.Crawling.Dynamics365.Infrastructure
@@ -21,148 +23,87 @@ namespace CluedIn.Crawling.Dynamics365.Infrastructure
     // This class should not contain crawling logic (i.e. in which order things are retrieved)
     public class Dynamics365Client
     {
-        private const string BaseUri = "http://sample.com";
-
         private readonly ILogger<Dynamics365Client> _log;
-        private readonly IRestClient _client;
-        private readonly Dynamics365CrawlJobData _dynamics365CrawlJobData;
+        private Dynamics365CrawlJobData dynamics365CrawlJobData;
 
-        public Dynamics365Client(ILogger<Dynamics365Client> log, Dynamics365CrawlJobData dynamics365CrawlJobData, IRestClient client) // TODO: pass on any extra dependencies
+        public Dynamics365Client(ILogger<Dynamics365Client> log, Dynamics365CrawlJobData dynamics365CrawlJobData)
         {
-            if (dynamics365CrawlJobData == null)
-            {
-                throw new ArgumentNullException(nameof(dynamics365CrawlJobData));
-            }
-
-            if (client == null)
-            {
-                throw new ArgumentNullException(nameof(client));
-            }
-
             _log = log ?? throw new ArgumentNullException(nameof(log));
-            _client = client ?? throw new ArgumentNullException(nameof(client));
-            _dynamics365CrawlJobData = dynamics365CrawlJobData ?? throw new ArgumentNullException(nameof(dynamics365CrawlJobData));
-
-
-            // TODO use info from dynamics365CrawlJobData to instantiate the connection
-            client.BaseUrl = new Uri(BaseUri);
-            client.AddDefaultParameter("api_key", dynamics365CrawlJobData.ApiKey, ParameterType.QueryString);
+            this.dynamics365CrawlJobData = dynamics365CrawlJobData ?? throw new ArgumentNullException(nameof(dynamics365CrawlJobData));
         }
 
-        private async Task<T> GetAsync<T>(string url)
+        public async Task<T> GetAsync<T>(string url)
         {
-            var request = new RestRequest(url, Method.GET);
-
-            var response = await _client.ExecuteTaskAsync(request);
-
-            if (response.StatusCode != HttpStatusCode.OK)
+            T data = default(T);
+            try
             {
-                var diagnosticMessage = $"Request to {_client.BaseUrl}{url} failed, response {response.ErrorMessage} ({response.StatusCode})";
-                _log.LogError(diagnosticMessage);
-                throw new InvalidOperationException($"Communication to jsonplaceholder unavailable. {diagnosticMessage}");
+                // set up client
+                var client = new HttpClient();
+                client.BaseAddress = new Uri(dynamics365CrawlJobData.BaseUrl);
+                client.Timeout = new TimeSpan(0, 2, 0);
+                client.DefaultRequestHeaders.Add("Prefer", "odata.maxpagesize=100");
+                client.DefaultRequestHeaders.Add("OData-MaxVersion", "4.0");
+                client.DefaultRequestHeaders.Add("OData-Version", "4.0");
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", dynamics365CrawlJobData.TargetApiKey);
+
+                // set up request uri
+                var filters = new List<string>();
+                if (dynamics365CrawlJobData.LastCrawlFinishTime != default(DateTimeOffset) && dynamics365CrawlJobData.DeltaCrawlEnabled)
+                {
+                    filters.Add($"(createdon ge {dynamics365CrawlJobData.LastCrawlFinishTime:yyyy-MM-ddThh:mm:ssZ} or modifiedon ge {dynamics365CrawlJobData.LastCrawlFinishTime:yyyy-MM-ddThh:mm:ssZ})");
+                }
+
+                var requestUri = url;
+                if (filters.Count > 0)
+                {
+                    requestUri += "$filter=" + string.Join(" and ", filters);
+                }
+
+                // request
+                var response = await client.GetAsync(url);
+                if (response.StatusCode == HttpStatusCode.Unauthorized)
+                {
+                    RefreshToken(dynamics365CrawlJobData);
+                }
+                else if (response.StatusCode != HttpStatusCode.OK)
+                {
+                    var diagnosticMessage = $"Request to {dynamics365CrawlJobData.BaseUrl}{url} failed, response {response.ReasonPhrase} ({response.StatusCode})";
+                    _log.LogError(diagnosticMessage);
+                    throw new InvalidOperationException($"Communication to jsonplaceholder unavailable. {diagnosticMessage}");
+                }
+
+                var body = await response.Content.ReadAsStringAsync();
+
+                data = JsonConvert.DeserializeObject<T>(body);
             }
-
-            var data = JsonConvert.DeserializeObject<T>(response.Content);
-
+            catch (Exception exception)
+            {
+                _log.LogError("Could not get data", exception);
+            }
             return data;
         }
 
-        public AccountInformation GetAccountInformation()
+        public void RefreshToken(Dynamics365CrawlJobData dynamics365CrawlJobData)
         {
-            //TODO - return some unique information about the remote data source
-            // that uniquely identifies the account
-            return new AccountInformation("", "");
-        }
-
-        public static async void RefreshToken(Dynamics365CrawlJobData dynamics365CrawlJobData)
-        {
-            string apiVersion = "9.1";
-            string webApiUrl = $"{dynamics365CrawlJobData.Url}/api/data/v{apiVersion}/";
-
             try
             {
-                var authenticationParameters = await AuthenticationParameters.CreateFromUrlAsync(new Uri(dynamics365CrawlJobData.Url + "/api/data/v9.0"));
+                var authenticationParameters =  AuthenticationParameters.CreateFromUrlAsync(new Uri(dynamics365CrawlJobData.BaseUrl)).Result;
                 //Workaround. Current version of AD library creates a wrong authority
                 authenticationParameters.Authority = authenticationParameters.Authority.Substring(0, authenticationParameters.Authority.Length - 16);
                 AuthenticationContext authenticationContext = new AuthenticationContext(authenticationParameters.Authority);
                 var token = authenticationContext.AcquireTokenAsync(authenticationParameters.Resource, new ClientCredential(dynamics365CrawlJobData.ClientId, dynamics365CrawlJobData.ClientSecret)).Result;
                 dynamics365CrawlJobData.TargetApiKey = token.AccessToken;
             }
-            catch
+            catch (Exception exception)
             {
-                throw new Exception("Unable to fetch token");
+                _log.LogError("Could not get access token", exception);
             }
         }
 
-        public IEnumerable<T> Get<T>(string endpoint, Dynamics365CrawlJobData dynamics365CrawlJobData)
+        public AccountInformation GetAccountInformation()
         {
-            DateTimeOffset lastCrawlFinishTime;
-            if (_dynamics365CrawlJobData.LastCrawlFinishTime == DateTimeOffset.Parse("1/1/0001 12:00:00 AM +00:00"))
-            {
-                lastCrawlFinishTime = DateTimeOffset.Parse("01/01/1753 00:00:00");
-            }
-            else
-            {
-                lastCrawlFinishTime = _dynamics365CrawlJobData.LastCrawlFinishTime;
-            }
-
-            var filter = $"(createdon ge {lastCrawlFinishTime:yyyy-MM-ddThh:mm:ssZ} or modifiedon ge {lastCrawlFinishTime:yyyy-MM-ddThh:mm:ssZ})";
-
-            string url;
-            if (_dynamics365CrawlJobData.DeltaCrawlEnabled)
-            {
-                url = _dynamics365CrawlJobData.Url + string.Format("/api/data/v9.1/{0}?$filter={1}", endpoint, filter);
-            }
-            else
-            {
-                url = _dynamics365CrawlJobData.Url + string.Format("/api/data/v9.1/{0}", endpoint);
-            }
-
-            ResultList<T> resultList = null;
-            while (true)
-            {
-                using HttpClient httpClient = new HttpClient();
-                try
-                {
-                    httpClient.Timeout = new TimeSpan(0, 2, 0);
-                    httpClient.DefaultRequestHeaders.Add("Prefer", "odata.maxpagesize=100");
-                    httpClient.DefaultRequestHeaders.Add("OData-MaxVersion", "4.0");
-                    httpClient.DefaultRequestHeaders.Add("OData-Version", "4.0");
-                    httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                    httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", dynamics365CrawlJobData.TargetApiKey);
-                    HttpResponseMessage responseMessage = httpClient.GetAsync(url).Result;
-                    var content = responseMessage.Content.ReadAsStringAsync().Result;
-                    if (responseMessage.StatusCode == HttpStatusCode.Unauthorized)
-                    {
-                        RefreshToken(dynamics365CrawlJobData);
-                        continue;
-                    }
-                    else if (responseMessage.StatusCode != HttpStatusCode.OK)
-                    {
-                        _log.LogError("Connection failed " + responseMessage.StatusCode);
-                    }
-                    resultList = JsonConvert.DeserializeObject<ResultList<T>>(content, new JsonSerializerSettings() { NullValueHandling = NullValueHandling.Ignore });
-                }
-                catch (Exception e)
-                {
-                    _log.LogError(e.Message);
-                }
-
-
-                if (resultList?.Value != null)
-                {
-                    foreach (var item in resultList.Value)
-                        yield return item;
-                }
-                else
-                {
-                    break;
-                }
-                if (resultList.NextLink == null)
-                {
-                    break;
-                }
-            }
+            return new AccountInformation("", "");
         }
     }
 }

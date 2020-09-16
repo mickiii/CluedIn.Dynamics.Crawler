@@ -16,14 +16,15 @@ namespace CluedIn.Crawling.Dynamics365.Core
             public const string Password = nameof(Password);
             public const string ClientId = nameof(ClientId);
             public const string ClientSecret = nameof(ClientSecret);
+            public const string APIVersion = nameof(APIVersion);
         }
 
         // TODO Complete the following section
         // Please see https://cluedin-io.github.io/CluedIn.Documentation/docs/1-Integration/build-integration.html
-        public const string CrawlerDescription = "Dynamics365 is a ... to be completed ...";
-        public const string Instructions = "Provide authentication instructions here, if applicable";
+        public const string CrawlerDescription = "Dynamics 365 is a product line of enterprise resource planning and customer relationship management applications by Microsoft.";
+        public const string Instructions = "";
         public const IntegrationType Type = IntegrationType.Cloud;
-        public const string Uri = "http://www.sampleurl.com"; //Uri of remote tool if applicable
+        public const string Uri = "https://dynamics.microsoft.com/en-us/";
 
         // To change the icon see embedded resource
         // src\Dynamics365.Provider\Resources\cluedin.png
@@ -39,9 +40,9 @@ namespace CluedIn.Crawling.Dynamics365.Core
             {
                 new Control()
                 {
-                    displayName = "ClientCredentials",
+                    displayName = "Client Credentials - Please enter your dynamics URL (e.g. https://cluedin.crm4.dynamics.com)",
                     isRequired = true,
-                    name = "ClientCredentials",
+                    name = Dynamics365Constants.KeyName.Url,
                     type = "text"
                 }
             },
@@ -49,17 +50,17 @@ namespace CluedIn.Crawling.Dynamics365.Core
             {
                 new Control()
                 {
-                    displayName = "UserCredential - userName",
+                    displayName = Dynamics365Constants.KeyName.UserName,
                     isRequired = true,
-                    name = "userName",
+                    name = Dynamics365Constants.KeyName.UserName,
                     type = "text"
                 },
                 new Control()
                 {
-                    displayName = "UserCredential - password",
+                    displayName = Dynamics365Constants.KeyName.Password,
                     isRequired = true,
-                    name = "password",
-                    type = "text"
+                    name = Dynamics365Constants.KeyName.Password,
+                    type = "password"
                 }
             },
             oauth = new OAuth()

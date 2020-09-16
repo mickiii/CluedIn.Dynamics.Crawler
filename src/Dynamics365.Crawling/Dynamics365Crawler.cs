@@ -24,76 +24,10 @@ namespace CluedIn.Crawling.Dynamics365
 
             var client = clientFactory.CreateNew(dynamics365crawlJobData);
 
-            foreach (var obj in client.Get<Account>("accounts", dynamics365crawlJobData))
+            foreach (var obj in  client.GetAsync<ResultList<Account>>("accounts").Result?.Value)
             {
                 yield return obj;
             }
-
-            foreach (var obj in client.Get<AccountLead>("accountleadscollection", dynamics365crawlJobData))
-            {
-                yield return obj;
-            }
-            
-            foreach (var obj in client.Get<ActivityParty>("activityparties", dynamics365crawlJobData))
-            {
-                yield return obj;
-            }
-
-            foreach (var obj in client.Get<ActivityPointer>("activitypointers", dynamics365crawlJobData))
-            {
-                yield return obj;
-            }
-            
-            foreach (var obj in client.Get<Appointment>("appointments", dynamics365crawlJobData))
-            {
-                yield return obj;
-            }
-            
-            foreach (var obj in client.Get<CampaignActivity>("campaignactivities", dynamics365crawlJobData))
-            {
-                yield return obj;
-            }
-            
-            foreach (var obj in client.Get<CampaignItem>("campaignitems", dynamics365crawlJobData))
-            {
-                yield return obj;
-            }
-            
-            foreach (var obj in client.Get<Contact>("contacts", dynamics365crawlJobData))
-            {
-                yield return obj;
-            }
-            
-            foreach (var obj in client.Get<ContactLead>("contactleadscollection", dynamics365crawlJobData))
-            {
-                yield return obj;
-            }
-            
-            foreach (var obj in client.Get<CustomerAddress>("customeraddresses", dynamics365crawlJobData))
-            {
-                yield return obj;
-            }
-            
-            foreach (var obj in client.Get<Lead>("leads", dynamics365crawlJobData))
-            {
-                yield return obj;
-            }
-            
-            foreach (var obj in client.Get<LeadAddress>("leadaddresses", dynamics365crawlJobData))
-            {
-                yield return obj;
-            }
-            
-            foreach (var obj in client.Get<Opportunity>("opportunities", dynamics365crawlJobData))
-            {
-                yield return obj;
-            }
-            
-            foreach (var obj in client.Get<Task>("tasks", dynamics365crawlJobData))
-            {
-                yield return obj;
-            }
-
         }
     }
 }

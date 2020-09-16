@@ -1,21 +1,18 @@
 using System;
 using System.Collections.Generic;
+using System.Configuration;
+using System.Linq;
 using System.Threading.Tasks;
-
 using CluedIn.Core;
+using CluedIn.Core.Configuration;
 using CluedIn.Core.Crawling;
 using CluedIn.Core.Data.Relational;
 using CluedIn.Core.Providers;
 using CluedIn.Core.Webhooks;
-using System.Configuration;
-using System.Linq;
-using CluedIn.Core.Configuration;
 using CluedIn.Crawling.Dynamics365.Core;
 using CluedIn.Crawling.Dynamics365.Infrastructure.Factories;
-using CluedIn.Crawling.Dynamics365.Infrastructure;
 using CluedIn.Providers.Models;
 using Newtonsoft.Json;
-using Microsoft.IdentityModel.Clients.ActiveDirectory;
 
 namespace CluedIn.Provider.Dynamics365
 {
@@ -38,62 +35,19 @@ namespace CluedIn.Provider.Dynamics365
         {
             if (configuration == null)
                 throw new ArgumentNullException(nameof(configuration));
-
-            var dynamics365CrawlJobData = new Dynamics365CrawlJobData();
-            if (configuration.ContainsKey(Dynamics365Constants.KeyName.Url))
-            { dynamics365CrawlJobData.Url = configuration[Dynamics365Constants.KeyName.Url].ToString(); }
-            if (configuration.ContainsKey(Dynamics365Constants.KeyName.DeltaCrawlEnabled))
-            { dynamics365CrawlJobData.DeltaCrawlEnabled = bool.Parse(configuration[Dynamics365Constants.KeyName.DeltaCrawlEnabled].ToString()); }
-            if (configuration.ContainsKey(Dynamics365Constants.KeyName.UserName))
-            { dynamics365CrawlJobData.UserName = configuration[Dynamics365Constants.KeyName.UserName].ToString(); }
-            if (configuration.ContainsKey(Dynamics365Constants.KeyName.Password))
-            { dynamics365CrawlJobData.Password = configuration[Dynamics365Constants.KeyName.Password].ToString(); }
-
-            if (configuration.ContainsKey(Dynamics365Constants.KeyName.ClientId))
-            {
-                dynamics365CrawlJobData.ClientId = configuration[Dynamics365Constants.KeyName.ClientId].ToString();
-            }
-            else
-            {
-                dynamics365CrawlJobData.ClientId = ConfigurationManager.AppSettings.GetValue<string>("Providers.Dynamics365ClientId", null);
-            }
-
-            if (configuration.ContainsKey(Dynamics365Constants.KeyName.ClientSecret))
-            {
-                dynamics365CrawlJobData.ClientSecret = configuration[Dynamics365Constants.KeyName.ClientSecret].ToString();
-            }
-            else
-            {
-                dynamics365CrawlJobData.ClientSecret = ConfigurationManager.AppSettings.GetValue<string>("Providers.Dynamics365ClientSecret", null);            
-            }
-
-            string apiVersion = "9.1";
-            string webApiUrl = $"{dynamics365CrawlJobData.Url}/api/data/v{apiVersion}/";
-
             try
             {
-                if (dynamics365CrawlJobData.UserName != null && dynamics365CrawlJobData.Password != null)
-                {
-                    Dynamics365Client.RefreshToken(dynamics365CrawlJobData);
-                }
-                else
-                {
-                    var authenticationParameters = await AuthenticationParameters.CreateFromUrlAsync(new Uri(webApiUrl));
-                    //Workaround. Current version of AD library creates a wrong authority
-                    authenticationParameters.Authority = authenticationParameters.Authority.Substring(0, authenticationParameters.Authority.Length - 16);
-                    AuthenticationContext authenticationContext = new AuthenticationContext(authenticationParameters.Authority);
-                    var clientCredential = new ClientCredential(dynamics365CrawlJobData.ClientId, dynamics365CrawlJobData.ClientSecret);
-                    var result = await authenticationContext.AcquireTokenAsync(authenticationParameters.Resource, clientCredential);
+                var dynamics365CrawlJobData = new Dynamics365CrawlJobData(configuration);
+                var client = _dynamics365ClientFactory.CreateNew(dynamics365CrawlJobData);
 
-                    dynamics365CrawlJobData.TargetApiKey = result.AccessToken;
-                }
+                client.RefreshToken(dynamics365CrawlJobData);
+
+                return await Task.FromResult(dynamics365CrawlJobData);
             }
-            catch (Exception e)
+            catch (Exception exception)
             {
-                throw e;
+                throw exception;
             }
-
-            return await Task.FromResult(dynamics365CrawlJobData);
         }
 
         public override Task<bool> TestAuthentication(

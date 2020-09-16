@@ -1,5 +1,6 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
+    <ProjectReference Include="..\Dynamics365.Crawling\Crawling.Dynamics365.csproj" />
     <ProjectReference Include="..\Dynamics365.Infrastructure\Crawling.Dynamics365.Infrastructure.csproj" />
   </ItemGroup>
   <ItemGroup>
