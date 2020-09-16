@@ -165,7 +165,7 @@ namespace CluedIn.Crawling.Dynamics365.Core.Models
         public string ModifiedBy { get; set; }
 
         [JsonProperty("versionnumber")]
-        public int? VersionNumber { get; set; }
+        public long? VersionNumber { get; set; }
 
         [JsonProperty("parentaccountid")]
         public string ParentAccountId { get; set; }
@@ -600,7 +600,7 @@ namespace CluedIn.Crawling.Dynamics365.Core.Models
         public Guid? EntityImageId { get; set; }
 
         [JsonProperty("entityimage_timestamp")]
-        public int? EntityImage_Timestamp { get; set; }
+        public long? EntityImage_Timestamp { get; set; }
 
         [JsonProperty("opendeals")]
         public long? OpenDeals { get; set; }

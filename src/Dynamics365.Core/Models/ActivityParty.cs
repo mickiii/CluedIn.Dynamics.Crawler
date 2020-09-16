@@ -54,7 +54,7 @@ namespace CluedIn.Crawling.Dynamics365.Core.Models
         public string ResourceSpecId { get; set; }
 
         [JsonProperty("versionnumber")]
-        public int? VersionNumber { get; set; }
+        public long VersionNumber { get; set; }
 
         [JsonProperty("resourcespecidname")]
         public string ResourceSpecIdName { get; set; }

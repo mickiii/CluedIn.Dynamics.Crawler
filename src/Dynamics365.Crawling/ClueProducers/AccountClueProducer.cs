@@ -4,6 +4,7 @@ using CluedIn.Core;
 using CluedIn.Core.Agent.Jobs;
 using CluedIn.Core.Crawling;
 using CluedIn.Core.Data;
+using CluedIn.Core.Data.Vocabularies;
 using CluedIn.Crawling.Dynamics365.Core;
 using CluedIn.Crawling.Dynamics365.Core.Models;
 using CluedIn.Crawling.Dynamics365.Vocabularies;
@@ -12,7 +13,7 @@ using CluedIn.Crawling.Helpers;
 
 namespace CluedIn.Crawling.Dynamics365.ClueProducers
 {
-    public abstract class AccountClueProducer<T> : DynamicsClueProducer<T> where T : Account
+    public abstract class AccountClueProducer : BaseClueProducer<Account>
     {
         private readonly IClueFactory _factory;
 
@@ -28,7 +29,7 @@ namespace CluedIn.Crawling.Dynamics365.ClueProducers
             _dynamics365CrawlJobData = state.JobData as Dynamics365CrawlJobData;
         }
 
-        protected override Clue MakeClueImpl([NotNull] T input, Guid accountId)
+        protected override Clue MakeClueImpl([NotNull] Account input, Guid accountId)
         {
             if (input == null)
                 throw new ArgumentNullException(nameof(input));
@@ -343,14 +344,13 @@ namespace CluedIn.Crawling.Dynamics365.ClueProducers
             data.Properties[vocab.MarketingOnlyName] = input.MarketingOnlyName.PrintIfAvailable();
             data.Properties[vocab.TeamsFollowed] = input.TeamsFollowed.PrintIfAvailable();
 
-            // Add custom fields
+            // Add custom vocab
             foreach (var key in input.Custom.Keys)
             {
-                var customVocab = $"{vocab.KeyPrefix}{vocab.KeySeparator}{key}";
-                data.Properties[customVocab] = input.Custom[key].PrintIfAvailable();
+                var vocabName = $"{vocab.KeyPrefix}{vocab.KeySeparator}{key}";
+                var vocabKey = new VocabularyKey(vocabName, VocabularyKeyDataType.Json, VocabularyKeyVisibility.Visible);
+                data.Properties[vocabKey] = input.Custom[key].ToString().PrintIfAvailable();
             }
-
-            Customize(clue, input);
 
             if (!data.OutgoingEdges.Any())
                 _factory.CreateEntityRootReference(clue, EntityEdgeType.PartOf);

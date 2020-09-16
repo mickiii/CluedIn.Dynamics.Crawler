@@ -49,31 +49,6 @@ namespace CluedIn.Crawling.Dynamics365.Infrastructure
             client.AddDefaultParameter("api_key", dynamics365CrawlJobData.ApiKey, ParameterType.QueryString);
         }
 
-        private async Task<T> GetAsync<T>(string url)
-        {
-            var request = new RestRequest(url, Method.GET);
-
-            var response = await _client.ExecuteTaskAsync(request);
-
-            if (response.StatusCode != HttpStatusCode.OK)
-            {
-                var diagnosticMessage = $"Request to {_client.BaseUrl}{url} failed, response {response.ErrorMessage} ({response.StatusCode})";
-                _log.LogError(diagnosticMessage);
-                throw new InvalidOperationException($"Communication to jsonplaceholder unavailable. {diagnosticMessage}");
-            }
-
-            var data = JsonConvert.DeserializeObject<T>(response.Content);
-
-            return data;
-        }
-
-        public AccountInformation GetAccountInformation()
-        {
-            //TODO - return some unique information about the remote data source
-            // that uniquely identifies the account
-            return new AccountInformation("", "");
-        }
-
         public static async void RefreshToken(Dynamics365CrawlJobData dynamics365CrawlJobData)
         {
             string apiVersion = "9.1";
@@ -156,13 +131,32 @@ namespace CluedIn.Crawling.Dynamics365.Infrastructure
                 }
                 else
                 {
-                    break;
+                    yield break;
                 }
                 if (resultList.NextLink == null)
                 {
-                    break;
+                    yield break;
                 }
             }
         }
+
+        public AccountInformation GetAccountInformation()
+        {
+            using (HttpClient httpClient = new HttpClient())
+            {
+                httpClient.Timeout = new TimeSpan(0, 2, 0);
+                httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _dynamics365CrawlJobData.TargetApiKey);
+
+                HttpResponseMessage response = httpClient.GetAsync(_dynamics365CrawlJobData.Url + "/api/data/v9.1/WhoAmI").Result;
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var content = response.Content.ReadAsStringAsync().Result;
+                    return new AccountInformation(content, content);
+                }
+            }
+            return new AccountInformation("", "");
+        }
+
     }
 }

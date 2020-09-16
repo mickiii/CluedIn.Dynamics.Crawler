@@ -60,7 +60,7 @@ namespace CluedIn.Crawling.Dynamics365.Core.Models
         public string ExpectedRevenue { get; set; }
 
         [JsonProperty("versionnumber")]
-        public int? VersionNumber { get; set; }
+        public long VersionNumber { get; set; }
 
         [JsonProperty("codename")]
         public string CodeName { get; set; }
