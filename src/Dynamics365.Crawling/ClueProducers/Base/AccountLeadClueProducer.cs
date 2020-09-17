@@ -12,20 +12,11 @@ using CluedIn.Crawling.Helpers;
 
 namespace CluedIn.Crawling.Dynamics365.ClueProducers
 {
-    public class AccountLeadClueProducer : DynamicsClueProducer<AccountLead>
+    public abstract class AccountLeadClueProducer : DynamicsClueProducer<AccountLead>
     {
-        private readonly IClueFactory _factory;
-
-        private readonly Dynamics365CrawlJobData _dynamics365CrawlJobData;
-
-        public AccountLeadClueProducer([NotNull] IClueFactory factory, IAgentJobProcessorState<CrawlJobData> state)
+        public AccountLeadClueProducer([NotNull] IClueFactory factory, IAgentJobProcessorState<CrawlJobData> state) : base(factory, state)
         {
-            if (factory == null)
-                throw new ArgumentNullException(nameof(factory));
 
-            _factory = factory;
-
-            _dynamics365CrawlJobData = state.JobData as Dynamics365CrawlJobData;
         }
 
         public override void Customize(Clue clue, AccountLead input)

@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-
+using System.Linq;
 using CluedIn.Core.Crawling;
 using CluedIn.Crawling.Dynamics365.Core;
 using CluedIn.Crawling.Dynamics365.Core.Models;
@@ -23,6 +23,22 @@ namespace CluedIn.Crawling.Dynamics365
             }
 
             var client = clientFactory.CreateNew(dynamics365crawlJobData);
+
+
+            foreach (var item in client.GetAsync<Rootobject>("EntityDefinitions").Result?.value)
+            {
+                var relationships = client.GetAsync<Rootobject<RelationshipDefinition>>(string.Format("RelationshipDefinitions/Microsoft.Dynamics.CRM.OneToManyRelationshipMetadata?$filter=ReferencingEntity eq '{0}'", item.LogicalName)).Result.value;
+
+                foreach (var entity in client.GetAsync<ResultList<DynamicsModel>>(item.LogicalCollectionName).Result?.Value)
+                {
+                    if (entity.Custom.FirstOrDefault(custom => custom.Key == entity.EntityDefinition.PrimaryIdAttribute).Value != null)
+                    {
+                        entity.RelationshipDefinitions = relationships.Where(r => r.ReferencingEntity == item.SchemaName).ToList();
+                        entity.EntityDefinition = item;
+                        yield return entity;
+                    } 
+                }
+            }
 
             foreach (var obj in  client.GetAsync<ResultList<Account>>("accounts").Result?.Value)
             {

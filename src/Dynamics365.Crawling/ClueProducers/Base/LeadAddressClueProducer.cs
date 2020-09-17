@@ -15,18 +15,8 @@ namespace CluedIn.Crawling.Dynamics365.ClueProducers
 {
     public abstract class LeadAddressClueProducer<T> : DynamicsClueProducer<T> where T : LeadAddress
     {
-        private readonly IClueFactory _factory;
-
-        private readonly Dynamics365CrawlJobData _dynamics365CrawlJobData;
-
-        public LeadAddressClueProducer([NotNull] IClueFactory factory, IAgentJobProcessorState<CrawlJobData> state)
+        public LeadAddressClueProducer([NotNull] IClueFactory factory, IAgentJobProcessorState<CrawlJobData> state) : base(factory, state)
         {
-            if (factory == null)
-                throw new ArgumentNullException(nameof(factory));
-
-            this._factory = factory;
-
-            this._dynamics365CrawlJobData = state.JobData as Dynamics365CrawlJobData;
         }
 
         protected override Clue MakeClueImpl([NotNull] T input, Guid accountId)
