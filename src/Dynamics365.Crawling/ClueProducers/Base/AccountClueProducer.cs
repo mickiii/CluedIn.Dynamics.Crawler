@@ -1,10 +1,8 @@
 using System;
-using System.Linq;
 using CluedIn.Core;
 using CluedIn.Core.Agent.Jobs;
 using CluedIn.Core.Crawling;
 using CluedIn.Core.Data;
-using CluedIn.Crawling.Dynamics365.Core;
 using CluedIn.Crawling.Dynamics365.Core.Models;
 using CluedIn.Crawling.Dynamics365.Vocabularies;
 using CluedIn.Crawling.Factories;
@@ -14,26 +12,21 @@ namespace CluedIn.Crawling.Dynamics365.ClueProducers
 {
     public abstract class AccountClueProducer<T> : DynamicsClueProducer<T> where T : Account
     {
-
         public AccountClueProducer([NotNull] IClueFactory factory, IAgentJobProcessorState<CrawlJobData> state) : base(factory, state)
         {
 
         }
 
-        protected override Clue MakeClueImpl([NotNull] T input, Guid accountId)
+        public abstract void CustomizeMore(Clue clue, T input);
+
+        public override Clue CreateClue(T input, Guid accountId)
         {
-            if (input == null)
-                throw new ArgumentNullException(nameof(input));
+            return _factory.Create(EntityType.Organization, input.AccountId.ToString(), accountId);
+        }
 
-            var clue = _factory.Create(EntityType.Organization, input.AccountId.ToString(), accountId);
-
+        public override void Customize(Clue clue, T input)
+        {
             var data = clue.Data.EntityData;
-
-            if (Uri.TryCreate(string.Format("{0}/main.aspx?pagetype=entityrecord&etn=account&id={1}", _dynamics365CrawlJobData.Url, input.AccountId.ToString()), UriKind.Absolute, out Uri uri))
-                data.Uri = uri;
-
-            data.Name = input.Name;
-
             //if (input.DefaultPriceLevelId != null)
             //    _factory.CreateOutgoingEntityReference(clue, EntityType.pricelevel, EntityEdgeType.Parent, input, input.DefaultPriceLevelId);
 
@@ -336,20 +329,6 @@ namespace CluedIn.Crawling.Dynamics365.ClueProducers
             data.Properties[vocab.MarketingOnly] = input.MarketingOnly.PrintIfAvailable();
             data.Properties[vocab.MarketingOnlyName] = input.MarketingOnlyName.PrintIfAvailable();
             data.Properties[vocab.TeamsFollowed] = input.TeamsFollowed.PrintIfAvailable();
-
-            // Add custom fields
-            foreach (var key in input.Custom.Keys)
-            {
-                var customVocab = $"{vocab.KeyPrefix}{vocab.KeySeparator}{key}";
-                data.Properties[customVocab] = input.Custom[key].PrintIfAvailable();
-            }
-
-            Customize(clue, input);
-
-            if (!data.OutgoingEdges.Any())
-                _factory.CreateEntityRootReference(clue, EntityEdgeType.PartOf);
-
-            return clue;
         }
     }
 }

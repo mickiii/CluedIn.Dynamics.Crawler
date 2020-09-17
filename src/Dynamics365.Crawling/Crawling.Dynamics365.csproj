@@ -7,7 +7,4 @@
       <SubType>Designer</SubType>
     </EmbeddedResource>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="ClueProducers\Standard\" />
-  </ItemGroup>
 </Project>
