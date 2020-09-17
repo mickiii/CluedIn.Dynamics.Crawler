@@ -5,6 +5,7 @@ using CluedIn.Core;
 using CluedIn.Core.Agent.Jobs;
 using CluedIn.Core.Crawling;
 using CluedIn.Core.Data;
+using CluedIn.Core.Data.Vocabularies;
 using CluedIn.Crawling.Dynamics365.Core;
 using CluedIn.Crawling.Dynamics365.Core.Models;
 using CluedIn.Crawling.Dynamics365.Vocabularies;
@@ -117,11 +118,12 @@ namespace CluedIn.Crawling.Dynamics365.ClueProducers
             data.Properties[vocab.ExchangeRate] = input.ExchangeRate.PrintIfAvailable();
             data.Properties[vocab.Composite] = input.Composite.PrintIfAvailable();
 
-            // Add custom fields
+            // Add custom vocab
             foreach (var key in input.Custom.Keys)
             {
-                var customVocab = $"{vocab.KeyPrefix}{vocab.KeySeparator}{key}";
-                data.Properties[customVocab] = input.Custom[key].PrintIfAvailable();
+                var vocabName = $"{vocab.KeyPrefix}{vocab.KeySeparator}{key}";
+                var vocabKey = new VocabularyKey(vocabName, VocabularyKeyDataType.Json, VocabularyKeyVisibility.Visible);
+                data.Properties[vocabKey] = input.Custom[key].ToString().PrintIfAvailable();
             }
 
             this.Customize(clue, input);

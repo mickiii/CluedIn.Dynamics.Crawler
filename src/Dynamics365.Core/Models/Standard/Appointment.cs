@@ -78,7 +78,7 @@ namespace CluedIn.Crawling.Dynamics365.Core.Models
         public Guid? SubscriptionId { get; set; }
 
         [JsonProperty("versionnumber")]
-        public int? VersionNumber { get; set; }
+        public long VersionNumber { get; set; }
 
         [JsonProperty("ownerid")]
         public string OwnerId { get; set; }

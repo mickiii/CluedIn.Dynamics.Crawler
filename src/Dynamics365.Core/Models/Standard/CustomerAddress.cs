@@ -84,7 +84,7 @@ namespace CluedIn.Crawling.Dynamics365.Core.Models
         public string Fax { get; set; }
 
         [JsonProperty("versionnumber")]
-        public int? VersionNumber { get; set; }
+        public long VersionNumber { get; set; }
 
         [JsonProperty("createdby")]
         public string CreatedBy { get; set; }
