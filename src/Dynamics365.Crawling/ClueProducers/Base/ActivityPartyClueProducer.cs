@@ -20,18 +20,14 @@ namespace CluedIn.Crawling.Dynamics365.ClueProducers
         {
 
         }
-
-        protected override Clue MakeClueImpl([NotNull] T input, Guid accountId)
+        public override Clue CreateClue(T input, Guid accountId)
         {
-            if (input == null)
-                throw new ArgumentNullException(nameof(input));
+            return _factory.Create(EntityType.Infrastructure.User, input.ActivityPartyId.ToString(), accountId);
+        }
 
-            var clue = this._factory.Create(EntityType.Unknown, input.ActivityPartyId.ToString(), accountId);
-
+        public override void Customize(Clue clue, T input)
+        {
             var data = clue.Data.EntityData;
-
-            if (Uri.TryCreate(string.Format("{0}/main.aspx?pagetype=entityrecord&etn=activityparty&id={1}", _dynamics365CrawlJobData.Url, input.ActivityPartyId.ToString()), UriKind.Absolute, out Uri uri))
-                data.Uri = uri;
 
             data.Name = input.PartyIdName;
             /*
@@ -195,21 +191,7 @@ namespace CluedIn.Crawling.Dynamics365.ClueProducers
             data.Properties[vocab.IsPartyDeletedName] = input.IsPartyDeletedName.PrintIfAvailable();
             data.Properties[vocab.AddressUsedEmailColumnNumber] = input.AddressUsedEmailColumnNumber.PrintIfAvailable();
 
-            // Add custom vocabulary
-            foreach (var key in input.Custom.Keys)
-            {
-                var vocabName = $"{vocab.KeyPrefix}{vocab.KeySeparator}{key}";
-                var vocabKey = new VocabularyKey(vocabName, VocabularyKeyDataType.Json, VocabularyKeyVisibility.Visible);
-                data.Properties[vocabKey] = input.Custom[key].ToString().PrintIfAvailable();
-            }
-
-            this.Customize(clue, input);
-
-            if (!data.OutgoingEdges.Any())
-                this._factory.CreateEntityRootReference(clue, EntityEdgeType.PartOf);
-
-            return clue;
-        }
+       }
     }
 }
 

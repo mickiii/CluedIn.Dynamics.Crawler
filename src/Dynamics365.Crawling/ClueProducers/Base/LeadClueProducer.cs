@@ -20,17 +20,14 @@ namespace CluedIn.Crawling.Dynamics365.ClueProducers
         {
         }
 
-        protected override Clue MakeClueImpl([NotNull] T input, Guid accountId)
+        public override Clue CreateClue(T input, Guid accountId)
         {
-            if (input == null)
-                throw new ArgumentNullException(nameof(input));
+            return _factory.Create(EntityType.Sales.Lead, input.LeadId.ToString(), accountId);
+        }
 
-            var clue = this._factory.Create(EntityType.Sales.Lead, input.LeadId.ToString(), accountId);
-
+        public override void Customize(Clue clue, T input)
+        {
             var data = clue.Data.EntityData;
-
-            if (Uri.TryCreate(string.Format("{0}/main.aspx?pagetype=entityrecord&etn=lead&id={1}", this._dynamics365CrawlJobData.Url, input.LeadId.ToString()), UriKind.Absolute, out Uri uri))
-                data.Uri = uri;
 
             data.Name = input.FullName;
 
@@ -318,21 +315,6 @@ namespace CluedIn.Crawling.Dynamics365.ClueProducers
             data.Properties[vocab.TeamsFollowed] = input.TeamsFollowed.PrintIfAvailable();
             data.Properties[vocab.BusinessCard] = input.BusinessCard.PrintIfAvailable();
             data.Properties[vocab.BusinessCardAttributes] = input.BusinessCardAttributes.PrintIfAvailable();
-
-            // Add custom vocab
-            foreach (var key in input.Custom.Keys)
-            {
-                var vocabName = $"{vocab.KeyPrefix}{vocab.KeySeparator}{key}";
-                var vocabKey = new VocabularyKey(vocabName, VocabularyKeyDataType.Json, VocabularyKeyVisibility.Visible);
-                data.Properties[vocabKey] = input.Custom[key].ToString().PrintIfAvailable();
-            }
-
-            this.Customize(clue, input);
-
-            if (!data.OutgoingEdges.Any())
-                this._factory.CreateEntityRootReference(clue, EntityEdgeType.PartOf);
-
-            return clue;
         }
     }
 }

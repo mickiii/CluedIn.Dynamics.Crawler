@@ -22,17 +22,14 @@ namespace CluedIn.Crawling.Dynamics365.ClueProducers
 
         }
 
-        protected override Clue MakeClueImpl([NotNull] T input, Guid accountId)
+        public override Clue CreateClue(T input, Guid accountId)
         {
-            if (input == null)
-                throw new ArgumentNullException(nameof(input));
+            return _factory.Create(EntityType.Marketing.Campaign, input.CampaignId.ToString(), accountId);
+        }
 
-            var clue = this._factory.Create(EntityType.Marketing.Campaign, input.CampaignId.ToString(), accountId);
-
+        public override void Customize(Clue clue, T input)
+        {
             var data = clue.Data.EntityData;
-
-            if (Uri.TryCreate(string.Format("{0}/main.aspx?pagetype=entityrecord&etn=campaign&id={1}", this._dynamics365CrawlJobData.Url, input.CampaignId.ToString()), UriKind.Absolute, out Uri uri))
-                data.Uri = uri;
 
             data.Name = input.Name;
 
@@ -144,21 +141,6 @@ namespace CluedIn.Crawling.Dynamics365.ClueProducers
             data.Properties[vocab.TraversedPath] = input.TraversedPath.PrintIfAvailable();
             data.Properties[vocab.EmailAddress] = input.EmailAddress.PrintIfAvailable();
             data.Properties[vocab.TmpRegardingObjectId] = input.TmpRegardingObjectId.PrintIfAvailable();
-
-            // Add custom vocab
-            foreach (var key in input.Custom.Keys)
-            {
-                var vocabName = $"{vocab.KeyPrefix}{vocab.KeySeparator}{key}";
-                var vocabKey = new VocabularyKey(vocabName, VocabularyKeyDataType.Json, VocabularyKeyVisibility.Visible);
-                data.Properties[vocabKey] = input.Custom[key].ToString().PrintIfAvailable();
-            }
-
-            this.Customize(clue, input);
-
-            if (!data.OutgoingEdges.Any())
-                this._factory.CreateEntityRootReference(clue, EntityEdgeType.PartOf);
-
-            return clue;
         }
     }
 }

@@ -236,6 +236,4 @@ namespace CluedIn.Crawling.Dynamics365.Core.Models
         [JsonProperty("IsEntityReferenceStored", NullValueHandling = NullValueHandling.Ignore)]
         public bool? IsEntityReferenceStored { get; set; }
     }
-
-
 }

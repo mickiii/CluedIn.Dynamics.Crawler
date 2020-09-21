@@ -44,6 +44,20 @@ namespace CluedIn.Crawling.Dynamics365.Core
                     isRequired = true,
                     name = Dynamics365Constants.KeyName.Url,
                     type = "text"
+                },
+                new Control()
+                {
+                    displayName = Dynamics365Constants.KeyName.ClientId,
+                    isRequired = true,
+                    name = Dynamics365Constants.KeyName.ClientId,
+                    type = "text"
+                },
+                 new Control()
+                {
+                    displayName = Dynamics365Constants.KeyName.ClientSecret,
+                    isRequired = true,
+                    name = Dynamics365Constants.KeyName.ClientSecret,
+                    type = "password"
                 }
             },
             credentials = new Control[]

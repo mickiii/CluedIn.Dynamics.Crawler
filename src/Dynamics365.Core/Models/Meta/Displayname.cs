@@ -2,8 +2,8 @@
 {
     public class Displayname
     {
-        public Localizedlabel2[] LocalizedLabels { get; set; }
-        public Userlocalizedlabel2 UserLocalizedLabel { get; set; }
+        public Localizedlabel[] LocalizedLabels { get; set; }
+        public Localizedlabel UserLocalizedLabel { get; set; }
     }
 
 }

@@ -1,5 +1,7 @@
 using System;
+using System.Linq;
 using System.Collections.Generic;
+using System.Dynamic;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -7,12 +9,9 @@ using System.Threading.Tasks;
 using CluedIn.Core.Providers;
 using CluedIn.Crawling.Dynamics365.Core;
 using CluedIn.Crawling.Dynamics365.Core.Models;
-using Microsoft.EntityFrameworkCore.Internal;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Clients.ActiveDirectory;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using RestSharp;
 
 namespace CluedIn.Crawling.Dynamics365.Infrastructure
 {
@@ -32,38 +31,103 @@ namespace CluedIn.Crawling.Dynamics365.Infrastructure
             this.dynamics365CrawlJobData = dynamics365CrawlJobData ?? throw new ArgumentNullException(nameof(dynamics365CrawlJobData));
         }
 
-        public async Task<T> GetAsync<T>(string url)
+        public async Task<ResultList<T>> GetList<T>(string url, int? top = null, string select = null, string filter = null, string expand = null, string next = null) where T : DynamicsModel
+        {
+            var data = await GetAsync<ResultList<T>>(url, true, null, true, top, select, filter, expand);
+            if (data != null)
+            {
+                if (data.NextLink != null)
+                    return await GetList<T>(url, top, select, filter, expand, data.NextLink);
+            }
+            else
+                data = new ResultList<T>() { Value = new List<T>() };
+
+            var definition = Get<ResultList<EntityDefinition>>("EntityDefinitions",
+                  null,
+                  string.Format("LogicalCollectionName eq '{0}'", url),
+                  "Attributes").Result?.Value?.FirstOrDefault();
+
+            if (definition == null)
+                return data;
+
+            var relationships = Get<ResultList<RelationshipDefinition>>
+                  (
+                  "RelationshipDefinitions/Microsoft.Dynamics.CRM.OneToManyRelationshipMetadata",
+                  null,
+                  string.Format("ReferencingEntity eq '{0}'", definition.LogicalName),
+                  null
+                  )?.Result?.Value;
+
+            foreach (var item in data.Value)
+            {
+                item.EntityDefinition = definition;
+                item.RelationshipDefinitions = relationships;
+            }
+            return data;
+        }
+
+        public async Task<T> Get<T>(string url, string select = null, string filter = null, string expand = null)
+        {
+            return await GetAsync<T>(url, false, null, false, null, select, filter, expand);
+        }
+
+        private async Task<T> GetAsync<T>(string url, bool page = true, string nextPageUrl = null, bool delta = true, int? top = null, string select = null, string filter = null, string expand = null)
         {
             T data = default(T);
             try
             {
                 // set up client
                 var client = new HttpClient();
-                client.BaseAddress = new Uri(dynamics365CrawlJobData.BaseUrl);
                 client.Timeout = new TimeSpan(0, 2, 0);
-                client.DefaultRequestHeaders.Add("Prefer", "odata.maxpagesize=100");
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
                 client.DefaultRequestHeaders.Add("OData-MaxVersion", "4.0");
                 client.DefaultRequestHeaders.Add("OData-Version", "4.0");
-                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                if (page && top == null)
+                    client.DefaultRequestHeaders.Add("Prefer", "odata.maxpagesize=100");
                 client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", dynamics365CrawlJobData.TargetApiKey);
 
                 // set up request uri
-                var filters = new List<string>();
-                if (dynamics365CrawlJobData.LastCrawlFinishTime != default(DateTimeOffset) && dynamics365CrawlJobData.DeltaCrawlEnabled)
-                {
-                    filters.Add($"(createdon ge {dynamics365CrawlJobData.LastCrawlFinishTime:yyyy-MM-ddThh:mm:ssZ} or modifiedon ge {dynamics365CrawlJobData.LastCrawlFinishTime:yyyy-MM-ddThh:mm:ssZ})");
-                }
+                var requestUri = nextPageUrl ?? url;
 
-                var requestUri = url;
-                if (filters.Count > 0)
+                // if this is the first call then construct the request Uri
+                if (nextPageUrl == null)
                 {
-                    requestUri += "$filter=" + string.Join(" and ", filters);
+                    client.BaseAddress = new Uri(dynamics365CrawlJobData.BaseUrl);
+                    var parameters = new List<string>();
+                    string filterParameter = null;
+
+                    if (select != null)
+                        parameters.Add("$select=" + select);
+
+                    if (expand != null)
+                        parameters.Add("$expand=" + expand);
+
+                    if (top != null)
+                        parameters.Add("$top=" + top);
+
+                    var filters = new List<string>();
+                    if (filter != null)
+                        filters.Add(filter);
+
+                    if (delta && dynamics365CrawlJobData.LastCrawlFinishTime != default(DateTimeOffset) && dynamics365CrawlJobData.DeltaCrawlEnabled)
+                    {
+                        filters.Add($"(createdon ge {dynamics365CrawlJobData.LastCrawlFinishTime:yyyy-MM-ddThh:mm:ssZ} " +
+                            $"or modifiedon ge {dynamics365CrawlJobData.LastCrawlFinishTime:yyyy-MM-ddThh:mm:ssZ})");
+                    }
+
+                    if (filters.Count > 0)
+                    {
+                        filterParameter = "$filter=" + string.Join(" and ", filters);
+                        parameters.Add(filterParameter);
+                    }
+                    requestUri += "?" + string.Join("&", parameters);
                 }
 
                 // request
-                var response = await client.GetAsync(url);
+                var response = await client.GetAsync(requestUri);
                 if (response.StatusCode == HttpStatusCode.Unauthorized)
                 {
+                    //TODO: Retry 
                     RefreshToken(dynamics365CrawlJobData);
                 }
                 else if (response.StatusCode != HttpStatusCode.OK)
@@ -88,7 +152,7 @@ namespace CluedIn.Crawling.Dynamics365.Infrastructure
         {
             try
             {
-                var authenticationParameters =  AuthenticationParameters.CreateFromUrlAsync(new Uri(dynamics365CrawlJobData.BaseUrl)).Result;
+                var authenticationParameters = AuthenticationParameters.CreateFromUrlAsync(new Uri(dynamics365CrawlJobData.BaseUrl)).Result;
                 //Workaround. Current version of AD library creates a wrong authority
                 authenticationParameters.Authority = authenticationParameters.Authority.Substring(0, authenticationParameters.Authority.Length - 16);
                 AuthenticationContext authenticationContext = new AuthenticationContext(authenticationParameters.Authority);
@@ -103,7 +167,10 @@ namespace CluedIn.Crawling.Dynamics365.Infrastructure
 
         public AccountInformation GetAccountInformation()
         {
-            return new AccountInformation("", "");
+            var whoAmI = Get<WhoAmI>("WhoAmI").Result;
+            if (whoAmI != null)
+                return new AccountInformation(whoAmI.UserId, whoAmI.UserId);
+            return new AccountInformation(string.Empty, string.Empty);
         }
     }
 }

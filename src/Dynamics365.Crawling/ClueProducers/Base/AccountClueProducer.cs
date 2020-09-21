@@ -17,8 +17,6 @@ namespace CluedIn.Crawling.Dynamics365.ClueProducers
 
         }
 
-        public abstract void CustomizeMore(Clue clue, T input);
-
         public override Clue CreateClue(T input, Guid accountId)
         {
             return _factory.Create(EntityType.Organization, input.AccountId.ToString(), accountId);
@@ -27,6 +25,12 @@ namespace CluedIn.Crawling.Dynamics365.ClueProducers
         public override void Customize(Clue clue, T input)
         {
             var data = clue.Data.EntityData;
+            data.Name = input.Name;
+            if (string.IsNullOrWhiteSpace(data.Name))
+            {
+                data.Name = input.Description;              
+            }
+            data.Description = input.Description;
             //if (input.DefaultPriceLevelId != null)
             //    _factory.CreateOutgoingEntityReference(clue, EntityType.pricelevel, EntityEdgeType.Parent, input, input.DefaultPriceLevelId);
 
