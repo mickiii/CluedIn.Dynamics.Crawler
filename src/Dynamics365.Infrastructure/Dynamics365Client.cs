@@ -12,6 +12,7 @@ using CluedIn.Crawling.Dynamics365.Core.Models;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Clients.ActiveDirectory;
 using Newtonsoft.Json;
+using Castle.Core.Internal;
 
 namespace CluedIn.Crawling.Dynamics365.Infrastructure
 {
@@ -33,7 +34,8 @@ namespace CluedIn.Crawling.Dynamics365.Infrastructure
 
         public async Task<ResultList<T>> GetList<T>(string url, int? top = null, string select = null, string filter = null, string expand = null, string next = null) where T : DynamicsModel
         {
-            var data = await GetAsync<ResultList<T>>(url, true, null, true, top, select, filter, expand);
+            _log.LogInformation("Getting " + Dynamics365Constants.ProviderName + "...." + url + " ............");
+            var data = await GetAsync<ResultList<T>>(url, true, next, true, top, select, filter, expand);
             if (data != null)
             {
                 if (data.NextLink != null)
