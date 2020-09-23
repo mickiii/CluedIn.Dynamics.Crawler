@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Linq;
-
 using CluedIn.Core;
 using CluedIn.Core.Agent.Jobs;
 using CluedIn.Core.Crawling;
@@ -14,40 +13,41 @@ using CluedIn.Crawling.Helpers;
 
 namespace CluedIn.Crawling.Dynamics365.ClueProducers
 {
-    public abstract class ContactLeadClueProducer<T> : DynamicsClueProducer<T> where T : ContactLead
+    public class AccountLeadClueProducer : DynamicsClueProducer<AccountLead>
     {
-        public ContactLeadClueProducer([NotNull] IClueFactory factory, IAgentJobProcessorState<CrawlJobData> state) : base(factory, state)
+        public AccountLeadClueProducer([NotNull] IClueFactory factory, IAgentJobProcessorState<CrawlJobData> state) : base(factory, state)
         {
 
         }
-
-        public override Clue CreateClue(T input, Guid accountId)
+        public override Clue CreateClue(AccountLead input, Guid accountId)
         {
-            return _factory.Create(EntityType.Infrastructure.User, input.ContactLeadId.ToString(), accountId);
+            return _factory.Create(EntityType.Sales.Lead, input.AccountLeadId.ToString(), accountId);
         }
-        public override void Customize(Clue clue, T input)
+
+        public override void Customize(Clue clue, AccountLead input)
         {
             var data = clue.Data.EntityData;
 
             data.Name = input.Name;
 
-            if (input.ContactId != null)
-                _factory.CreateOutgoingEntityReference(clue, EntityType.Infrastructure.User, EntityEdgeType.AttachedTo, input, input.ContactId.ToString());
+            if (input.AccountId != null)
+                _factory.CreateOutgoingEntityReference(clue, EntityType.Organization, EntityEdgeType.AttachedTo, input, input.AccountId.ToString());
 
             if (input.LeadId != null)
                 _factory.CreateOutgoingEntityReference(clue, EntityType.Sales.Lead, EntityEdgeType.AttachedTo, input, input.LeadId.ToString());
 
-            var vocab = new ContactLeadVocabulary();
+            var vocab = new AccountLeadVocabulary();
 
-            data.Properties[vocab.ContactId] = input.ContactId.PrintIfAvailable();
-            data.Properties[vocab.ContactLeadId] = input.ContactLeadId.PrintIfAvailable();
+            data.Properties[vocab.AccountId] = input.AccountId.PrintIfAvailable();
+            data.Properties[vocab.AccountLeadId] = input.AccountLeadId.PrintIfAvailable();
             data.Properties[vocab.ImportSequenceNumber] = input.ImportSequenceNumber.PrintIfAvailable();
             data.Properties[vocab.LeadId] = input.LeadId.PrintIfAvailable();
             data.Properties[vocab.Name] = input.Name.PrintIfAvailable();
             data.Properties[vocab.OverriddenCreatedOn] = input.OverriddenCreatedOn.PrintIfAvailable();
             data.Properties[vocab.TimezoneRuleVersionNumber] = input.TimezoneRuleVersionNumber.PrintIfAvailable();
             data.Properties[vocab.UtcConversionTimezoneCode] = input.UtcConversionTimezoneCode.PrintIfAvailable();
-        }
+            data.Properties[vocab.VersionNumber] = input.VersionNumber.PrintIfAvailable();
+        }    
     }
 }
 

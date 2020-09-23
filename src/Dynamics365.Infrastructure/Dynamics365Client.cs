@@ -1,7 +1,6 @@
 using System;
 using System.Linq;
 using System.Collections.Generic;
-using System.Dynamic;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -12,7 +11,6 @@ using CluedIn.Crawling.Dynamics365.Core.Models;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Clients.ActiveDirectory;
 using Newtonsoft.Json;
-using Castle.Core.Internal;
 
 namespace CluedIn.Crawling.Dynamics365.Infrastructure
 {

@@ -14,19 +14,19 @@ using CluedIn.Crawling.Helpers;
 
 namespace CluedIn.Crawling.Dynamics365.ClueProducers
 {
-    public abstract class TaskClueProducer<T> : DynamicsClueProducer<T> where T : Task
+    public class TaskClueProducer : DynamicsClueProducer<Task>
     {
         public TaskClueProducer([NotNull] IClueFactory factory, IAgentJobProcessorState<CrawlJobData> state) : base(factory, state)
         {
 
         }
 
-        public override Clue CreateClue(T input, Guid accountId)
+        public override Clue CreateClue(Task input, Guid accountId)
         {
             return _factory.Create(EntityType.Task, input.ActivityId.ToString(), accountId);
         }
 
-        public override void Customize(Clue clue, T input)
+        public override void Customize(Clue clue, Task input)
         {
             var data = clue.Data.EntityData;
 

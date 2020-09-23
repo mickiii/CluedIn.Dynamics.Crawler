@@ -14,7 +14,7 @@ using CluedIn.Crawling.Helpers;
 
 namespace CluedIn.Crawling.Dynamics365.ClueProducers
 {
-    public abstract class CampaignActivityClueProducer<T> : DynamicsClueProducer<T> where T : CampaignActivity
+    public class CampaignActivityClueProducer : DynamicsClueProducer<CampaignActivity>
     {
 
         public CampaignActivityClueProducer([NotNull] IClueFactory factory, IAgentJobProcessorState<CrawlJobData> state) : base(factory, state)
@@ -22,12 +22,12 @@ namespace CluedIn.Crawling.Dynamics365.ClueProducers
 
         }
 
-        public override Clue CreateClue(T input, Guid accountId)
+        public override Clue CreateClue(CampaignActivity input, Guid accountId)
         {
             return _factory.Create(EntityType.Activity, input.ActivityId.ToString(), accountId);
         }
 
-        public override void Customize(Clue clue, T input)
+        public override void Customize(Clue clue, CampaignActivity input)
         {
             var data = clue.Data.EntityData;
 

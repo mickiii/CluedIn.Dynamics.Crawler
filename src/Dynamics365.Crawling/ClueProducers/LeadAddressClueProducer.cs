@@ -14,32 +14,31 @@ using CluedIn.Crawling.Helpers;
 
 namespace CluedIn.Crawling.Dynamics365.ClueProducers
 {
-    public abstract class CustomerAddressClueProducer<T> : DynamicsClueProducer<T> where T : CustomerAddress
+    public class LeadAddressClueProducer : DynamicsClueProducer<LeadAddress>
     {
-        public CustomerAddressClueProducer([NotNull] IClueFactory factory, IAgentJobProcessorState<CrawlJobData> state) : base(factory, state)
+        public LeadAddressClueProducer([NotNull] IClueFactory factory, IAgentJobProcessorState<CrawlJobData> state) : base(factory, state)
         {
-
         }
 
-        public override Clue CreateClue(T input, Guid accountId)
+        public override Clue CreateClue(LeadAddress input, Guid accountId)
         {
-            return _factory.Create(EntityType.Location.Address, input.CustomerAddressId.ToString(), accountId);
+            return _factory.Create(EntityType.Location.Address, input.LeadAddressId.ToString(), accountId);
         }
 
-        public override void Customize(Clue clue, T input)
+        public override void Customize(Clue clue, LeadAddress input)
         {
             var data = clue.Data.EntityData;
 
             data.Name = input.Name;
             /*
              if (input.ParentId != null)
-                            _factory.CreateOutgoingEntityReference(clue, EntityType.contact, EntityEdgeType.Parent, input, input.ParentId);
+                            _factory.CreateOutgoingEntityReference(clue, EntityType.lead, EntityEdgeType.Parent, input, input.ParentId);
 
                          if (input.TransactionCurrencyId != null)
                             _factory.CreateOutgoingEntityReference(clue, EntityType.transactioncurrency, EntityEdgeType.Parent, input, input.TransactionCurrencyId);
 
-                         if (input.ParentId != null)
-                            _factory.CreateOutgoingEntityReference(clue, EntityType.account, EntityEdgeType.Parent, input, input.ParentId);
+                         if (input.CreatedOnBehalfBy != null)
+                            _factory.CreateOutgoingEntityReference(clue, EntityType.systemuser, EntityEdgeType.Parent, input, input.CreatedOnBehalfBy);
 
                          if (input.ModifiedBy != null)
                             _factory.CreateOutgoingEntityReference(clue, EntityType.systemuser, EntityEdgeType.Parent, input, input.ModifiedBy);
@@ -50,20 +49,15 @@ namespace CluedIn.Crawling.Dynamics365.ClueProducers
                          if (input.ModifiedOnBehalfBy != null)
                             _factory.CreateOutgoingEntityReference(clue, EntityType.systemuser, EntityEdgeType.Parent, input, input.ModifiedOnBehalfBy);
 
-                         if (input.CreatedOnBehalfBy != null)
-                            _factory.CreateOutgoingEntityReference(clue, EntityType.systemuser, EntityEdgeType.Parent, input, input.CreatedOnBehalfBy);
-
             */
 
-            var vocab = new CustomerAddressVocabulary();
+            var vocab = new LeadAddressVocabulary();
 
             data.Properties[vocab.ParentId] = input.ParentId.PrintIfAvailable();
-            data.Properties[vocab.CustomerAddressId] = input.CustomerAddressId.PrintIfAvailable();
+            data.Properties[vocab.LeadAddressId] = input.LeadAddressId.PrintIfAvailable();
             data.Properties[vocab.AddressNumber] = input.AddressNumber.PrintIfAvailable();
-            data.Properties[vocab.ObjectTypeCode] = input.ObjectTypeCode.PrintIfAvailable();
             data.Properties[vocab.AddressTypeCode] = input.AddressTypeCode.PrintIfAvailable();
             data.Properties[vocab.Name] = input.Name.PrintIfAvailable();
-            data.Properties[vocab.PrimaryContactName] = input.PrimaryContactName.PrintIfAvailable();
             data.Properties[vocab.Line1] = input.Line1.PrintIfAvailable();
             data.Properties[vocab.Line2] = input.Line2.PrintIfAvailable();
             data.Properties[vocab.Line3] = input.Line3.PrintIfAvailable();
@@ -74,7 +68,6 @@ namespace CluedIn.Crawling.Dynamics365.ClueProducers
             data.Properties[vocab.PostOfficeBox] = input.PostOfficeBox.PrintIfAvailable();
             data.Properties[vocab.PostalCode] = input.PostalCode.PrintIfAvailable();
             data.Properties[vocab.UTCOffset] = input.UTCOffset.PrintIfAvailable();
-            data.Properties[vocab.FreightTermsCode] = input.FreightTermsCode.PrintIfAvailable();
             data.Properties[vocab.UPSZone] = input.UPSZone.PrintIfAvailable();
             data.Properties[vocab.Latitude] = input.Latitude.PrintIfAvailable();
             data.Properties[vocab.Telephone1] = input.Telephone1.PrintIfAvailable();
@@ -88,23 +81,14 @@ namespace CluedIn.Crawling.Dynamics365.ClueProducers
             data.Properties[vocab.CreatedOn] = input.CreatedOn.PrintIfAvailable();
             data.Properties[vocab.ModifiedBy] = input.ModifiedBy.PrintIfAvailable();
             data.Properties[vocab.ModifiedOn] = input.ModifiedOn.PrintIfAvailable();
+            data.Properties[vocab.ParentIdName] = input.ParentIdName.PrintIfAvailable();
             data.Properties[vocab.CreatedByName] = input.CreatedByName.PrintIfAvailable();
             data.Properties[vocab.ModifiedByName] = input.ModifiedByName.PrintIfAvailable();
             data.Properties[vocab.ShippingMethodCodeName] = input.ShippingMethodCodeName.PrintIfAvailable();
-            data.Properties[vocab.FreightTermsCodeName] = input.FreightTermsCodeName.PrintIfAvailable();
             data.Properties[vocab.AddressTypeCodeName] = input.AddressTypeCodeName.PrintIfAvailable();
-            data.Properties[vocab.ObjectTypeCodeName] = input.ObjectTypeCodeName.PrintIfAvailable();
-            data.Properties[vocab.OwningBusinessUnit] = input.OwningBusinessUnit.PrintIfAvailable();
-            data.Properties[vocab.OwningUser] = input.OwningUser.PrintIfAvailable();
-            data.Properties[vocab.TimeZoneRuleVersionNumber] = input.TimeZoneRuleVersionNumber.PrintIfAvailable();
-            data.Properties[vocab.OverriddenCreatedOn] = input.OverriddenCreatedOn.PrintIfAvailable();
-            data.Properties[vocab.UTCConversionTimeZoneCode] = input.UTCConversionTimeZoneCode.PrintIfAvailable();
-            data.Properties[vocab.ImportSequenceNumber] = input.ImportSequenceNumber.PrintIfAvailable();
-            data.Properties[vocab.CreatedByYomiName] = input.CreatedByYomiName.PrintIfAvailable();
             data.Properties[vocab.ModifiedByYomiName] = input.ModifiedByYomiName.PrintIfAvailable();
-            data.Properties[vocab.OwnerIdType] = input.OwnerIdType.PrintIfAvailable();
-            data.Properties[vocab.OwnerId] = input.OwnerId.PrintIfAvailable();
-            data.Properties[vocab.ParentIdTypeCode] = input.ParentIdTypeCode.PrintIfAvailable();
+            data.Properties[vocab.ParentIdYomiName] = input.ParentIdYomiName.PrintIfAvailable();
+            data.Properties[vocab.CreatedByYomiName] = input.CreatedByYomiName.PrintIfAvailable();
             data.Properties[vocab.CreatedOnBehalfBy] = input.CreatedOnBehalfBy.PrintIfAvailable();
             data.Properties[vocab.CreatedOnBehalfByName] = input.CreatedOnBehalfByName.PrintIfAvailable();
             data.Properties[vocab.CreatedOnBehalfByYomiName] = input.CreatedOnBehalfByYomiName.PrintIfAvailable();
@@ -115,6 +99,12 @@ namespace CluedIn.Crawling.Dynamics365.ClueProducers
             data.Properties[vocab.TransactionCurrencyIdName] = input.TransactionCurrencyIdName.PrintIfAvailable();
             data.Properties[vocab.ExchangeRate] = input.ExchangeRate.PrintIfAvailable();
             data.Properties[vocab.Composite] = input.Composite.PrintIfAvailable();
+            data.Properties[vocab.OwningBusinessUnit] = input.OwningBusinessUnit.PrintIfAvailable();
+            data.Properties[vocab.OwnerId] = input.OwnerId.PrintIfAvailable();
+            data.Properties[vocab.ImportSequenceNumber] = input.ImportSequenceNumber.PrintIfAvailable();
+            data.Properties[vocab.OverriddenCreatedOn] = input.OverriddenCreatedOn.PrintIfAvailable();
+            data.Properties[vocab.TimeZoneRuleVersionNumber] = input.TimeZoneRuleVersionNumber.PrintIfAvailable();
+            data.Properties[vocab.UTCConversionTimeZoneCode] = input.UTCConversionTimeZoneCode.PrintIfAvailable();
         }
     }
 }

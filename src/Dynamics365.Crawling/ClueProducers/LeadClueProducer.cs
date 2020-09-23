@@ -14,18 +14,18 @@ using CluedIn.Crawling.Helpers;
 
 namespace CluedIn.Crawling.Dynamics365.ClueProducers
 {
-    public abstract class LeadClueProducer<T> : DynamicsClueProducer<T> where T : Lead
+    public class LeadClueProducer : DynamicsClueProducer<Lead>
     {
         public LeadClueProducer([NotNull] IClueFactory factory, IAgentJobProcessorState<CrawlJobData> state) : base(factory, state)
         {
         }
 
-        public override Clue CreateClue(T input, Guid accountId)
+        public override Clue CreateClue(Lead input, Guid accountId)
         {
             return _factory.Create(EntityType.Sales.Lead, input.LeadId.ToString(), accountId);
         }
 
-        public override void Customize(Clue clue, T input)
+        public override void Customize(Clue clue, Lead input)
         {
             var data = clue.Data.EntityData;
 
