@@ -24,26 +24,107 @@ namespace CluedIn.Crawling.Dynamics365
 
             var client = clientFactory.CreateNew(dynamics365crawlJobData);
 
+            int? top = null; //set to null if you're not testing
 
-            foreach (var item in client.GetAsync<Rootobject>("EntityDefinitions").Result?.value)
+            foreach (var item in client.GetList<Account>("accounts", top).Result?.Value)
             {
-                var relationships = client.GetAsync<Rootobject<RelationshipDefinition>>(string.Format("RelationshipDefinitions/Microsoft.Dynamics.CRM.OneToManyRelationshipMetadata?$filter=ReferencingEntity eq '{0}'", item.LogicalName)).Result.value;
-
-                foreach (var entity in client.GetAsync<ResultList<DynamicsModel>>(item.LogicalCollectionName).Result?.Value)
-                {
-                    if (entity.Custom.FirstOrDefault(custom => custom.Key == entity.EntityDefinition.PrimaryIdAttribute).Value != null)
-                    {
-                        entity.RelationshipDefinitions = relationships.Where(r => r.ReferencingEntity == item.SchemaName).ToList();
-                        entity.EntityDefinition = item;
-                        yield return entity;
-                    } 
-                }
+                yield return item;
             }
 
-            foreach (var obj in  client.GetAsync<ResultList<Account>>("accounts").Result?.Value)
+            foreach (var item in client.GetList<AccountLead>("accountleadscollection", top).Result?.Value)
             {
-                yield return obj;
+                yield return item;
             }
+
+            foreach (var item in client.GetList<ActivityParty>("activityparties", top).Result?.Value)
+            {
+                yield return item;
+            }
+
+            foreach (var item in client.GetList<ActivityPointer>("activitypointers", top).Result?.Value)
+            {
+                yield return item;
+            }
+
+            foreach (var item in client.GetList<Appointment>("appointments", top).Result?.Value)
+            {
+                yield return item;
+            }
+
+            foreach (var item in client.GetList<CampaignActivity>("campaignactivities", top).Result?.Value)
+            {
+                yield return item;
+            }
+
+            foreach (var item in client.GetList<CampaignItem>("campaignitems", top).Result?.Value)
+            {
+                yield return item;
+            }
+
+            foreach (var item in client.GetList<Contact>("contacts", top).Result?.Value)
+            {
+                yield return item;
+            }
+
+            foreach (var item in client.GetList<ContactLead>("contactleadscollection", top).Result?.Value)
+            {
+                yield return item;
+            }
+
+            foreach (var item in client.GetList<CustomerAddress>("customeraddresses", top).Result?.Value)
+            {
+                yield return item;
+            }
+
+            foreach (var item in client.GetList<Lead>("leads", top).Result?.Value)
+            {
+                yield return item;
+            }
+
+            foreach (var item in client.GetList<LeadAddress>("leadaddresses", top).Result?.Value)
+            {
+                yield return item;
+            }
+
+            foreach (var item in client.GetList<Opportunity>("opportunities", top).Result?.Value)
+            {
+                yield return item;
+            }
+
+            foreach (var item in client.GetList<Task>("tasks", top).Result?.Value)
+            {
+                yield return item;
+            }
+
+            //foreach (var item in client.GetList<EntityDefinition>("EntityDefinitions?$expand=Attributes")?.Result?.Value)
+            //{
+            //    var relationships = client.GetList<RelationshipDefinition>
+            //        (
+            //        "RelationshipDefinitions/Microsoft.Dynamics.CRM.OneToManyRelationshipMetadata",
+            //        null,
+            //        null,
+            //        string.Format("ReferencingEntity eq '{0}'", item.LogicalName),
+            //        null
+            //        )?.Result?.Value;
+
+            //    if (item.LogicalCollectionName != null)
+            //    {
+            //        var entities = client.GetList<DynamicsModel>(item.LogicalCollectionName, top).Result;
+            //        if (entities == null || entities.Value == null)
+            //            continue;
+            //        foreach (var entity in entities.Value)
+            //        {
+            //            entity.EntityDefinition = item;
+            //            if (entity.Custom.FirstOrDefault(custom => custom.Key == entity.EntityDefinition.PrimaryIdAttribute).Value != null)
+            //            {
+            //                entity.RelationshipDefinitions = relationships?.Where(r => r.ReferencingEntity == item.SchemaName)?.ToList();
+            //            }
+            //            if (entity.Custom.FirstOrDefault(custom => custom.Key == entity.EntityDefinition.PrimaryIdAttribute).Value != null)
+            //                yield return entity;
+            //        }
+            //    }
+            //}
         }
+
     }
 }

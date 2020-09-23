@@ -19,7 +19,7 @@ namespace CluedIn.Provider.Dynamics365.WebApi
         {
         }
 
-        // GET: Authenticate and Fetch Data
+        // GET: Authenticate and Fetch Data      
         public IActionResult Get(string authError)
         {
             using (var context = CreateRequestExecutionContext(UserPrincipal))

@@ -14,24 +14,22 @@ using CluedIn.Crawling.Helpers;
 
 namespace CluedIn.Crawling.Dynamics365.ClueProducers
 {
-    public abstract class ActivityPointerClueProducer<T> : DynamicsClueProducer<T> where T : ActivityPointer
+    public class ActivityPointerClueProducer : DynamicsClueProducer<ActivityPointer>
     {
         public ActivityPointerClueProducer([NotNull] IClueFactory factory, IAgentJobProcessorState<CrawlJobData> state) : base(factory, state)
         {
 
         }
 
-        protected override Clue MakeClueImpl([NotNull] T input, Guid accountId)
+        public override Clue CreateClue(ActivityPointer input, Guid accountId)
         {
-            if (input == null)
-                throw new ArgumentNullException(nameof(input));
+            return _factory.Create(EntityType.Activity, input.ActivityId.ToString(), accountId);
+        }
 
-            var clue = this._factory.Create(EntityType.Unknown, input.ActivityId.ToString(), accountId);
-
+        public override void Customize(Clue clue, ActivityPointer input)
+        {
             var data = clue.Data.EntityData;
 
-            if (Uri.TryCreate(string.Format("{0}/main.aspx?pagetype=entityrecord&etn=activitypointer&id={1}", _dynamics365CrawlJobData.Url, input.ActivityId.ToString()), UriKind.Absolute, out Uri uri))
-                data.Uri = uri;
 
             data.Name = input.Subject;
 
@@ -388,20 +386,6 @@ namespace CluedIn.Crawling.Dynamics365.ClueProducers
             data.Properties[vocab.SLAInvokedIdName] = input.SLAInvokedIdName.PrintIfAvailable();
             data.Properties[vocab.SortDate] = input.SortDate.PrintIfAvailable();
 
-            // Add custom vocab
-            foreach (var key in input.Custom.Keys)
-            {
-                var vocabName = $"{vocab.KeyPrefix}{vocab.KeySeparator}{key}";
-                var vocabKey = new VocabularyKey(vocabName, VocabularyKeyDataType.Json, VocabularyKeyVisibility.Visible);
-                data.Properties[vocabKey] = input.Custom[key].ToString().PrintIfAvailable();
-            }
-
-            this.Customize(clue, input);
-
-            if (!data.OutgoingEdges.Any())
-                this._factory.CreateEntityRootReference(clue, EntityEdgeType.PartOf);
-
-            return clue;
         }
     }
 }

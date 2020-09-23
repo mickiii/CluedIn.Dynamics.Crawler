@@ -10,23 +10,27 @@ using CluedIn.Crawling.Helpers;
 
 namespace CluedIn.Crawling.Dynamics365.ClueProducers
 {
-    public abstract class AccountClueProducer<T> : DynamicsClueProducer<T> where T : Account
+    public class AccountClueProducer : DynamicsClueProducer<Account>
     {
         public AccountClueProducer([NotNull] IClueFactory factory, IAgentJobProcessorState<CrawlJobData> state) : base(factory, state)
         {
 
         }
 
-        public abstract void CustomizeMore(Clue clue, T input);
-
-        public override Clue CreateClue(T input, Guid accountId)
+        public override Clue CreateClue(Account input, Guid accountId)
         {
             return _factory.Create(EntityType.Organization, input.AccountId.ToString(), accountId);
         }
 
-        public override void Customize(Clue clue, T input)
+        public override void Customize(Clue clue, Account input)
         {
             var data = clue.Data.EntityData;
+            data.Name = input.Name;
+            if (string.IsNullOrWhiteSpace(data.Name))
+            {
+                data.Name = input.Description;              
+            }
+            data.Description = input.Description;
             //if (input.DefaultPriceLevelId != null)
             //    _factory.CreateOutgoingEntityReference(clue, EntityType.pricelevel, EntityEdgeType.Parent, input, input.DefaultPriceLevelId);
 

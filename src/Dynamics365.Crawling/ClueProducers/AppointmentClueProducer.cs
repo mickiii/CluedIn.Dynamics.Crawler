@@ -14,24 +14,21 @@ using CluedIn.Crawling.Helpers;
 
 namespace CluedIn.Crawling.Dynamics365.ClueProducers
 {
-    public abstract class AppointmentClueProducer<T> : DynamicsClueProducer<T> where T : Appointment
+    public class AppointmentClueProducer : DynamicsClueProducer<Appointment>
     {
         public AppointmentClueProducer([NotNull] IClueFactory factory, IAgentJobProcessorState<CrawlJobData> state) : base(factory, state)
         {
 
         }
 
-        protected override Clue MakeClueImpl([NotNull] T input, Guid accountId)
+        public override Clue CreateClue(Appointment input, Guid accountId)
         {
-            if (input == null)
-                throw new ArgumentNullException(nameof(input));
+            return _factory.Create(EntityType.Activity, input.ActivityId.ToString(), accountId);
+        }
 
-            var clue = this._factory.Create(EntityType.Unknown, input.ActivityId.ToString(), accountId);
-
+        public override void Customize(Clue clue, Appointment input)
+        {
             var data = clue.Data.EntityData;
-
-            if (Uri.TryCreate(string.Format("{0}/main.aspx?pagetype=entityrecord&etn=appointment&id={1}", _dynamics365CrawlJobData.Url, input.ActivityId.ToString()), UriKind.Absolute, out Uri uri))
-                data.Uri = uri;
 
             data.Name = input.Subject;
             /*
@@ -396,21 +393,6 @@ namespace CluedIn.Crawling.Dynamics365.ClueProducers
             data.Properties[vocab.IsUnsafe] = input.IsUnsafe.PrintIfAvailable();
             data.Properties[vocab.IsDraft] = input.IsDraft.PrintIfAvailable();
             data.Properties[vocab.IsDraftName] = input.IsDraftName.PrintIfAvailable();
-
-            // Add custom vocab
-            foreach (var key in input.Custom.Keys)
-            {
-                var vocabName = $"{vocab.KeyPrefix}{vocab.KeySeparator}{key}";
-                var vocabKey = new VocabularyKey(vocabName, VocabularyKeyDataType.Json, VocabularyKeyVisibility.Visible);
-                data.Properties[vocabKey] = input.Custom[key].ToString().PrintIfAvailable();
-            }
-
-            this.Customize(clue, input);
-
-            if (!data.OutgoingEdges.Any())
-                this._factory.CreateEntityRootReference(clue, EntityEdgeType.PartOf);
-
-            return clue;
         }
     }
 }

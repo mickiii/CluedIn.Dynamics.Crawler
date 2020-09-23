@@ -1,17 +1,12 @@
 ﻿using System;
+using System.Linq;
 using CluedIn.Core;
-using CluedIn.Core.Data;
-using CluedIn.Crawling.Factories;
-using CluedIn.Crawling.Helpers;
-
-using CluedIn.Crawling.Dynamics365.Vocabularies;
-using CluedIn.Crawling.Dynamics365.Core.Models;
-using RuleConstants = CluedIn.Core.Constants.Validation.Rules;
-using Microsoft.IdentityModel.Clients.ActiveDirectory;
-using CluedIn.Crawling.Dynamics365.Core;
 using CluedIn.Core.Agent.Jobs;
 using CluedIn.Core.Crawling;
-using System.Linq;
+using CluedIn.Core.Data;
+using CluedIn.Crawling.Dynamics365.Core;
+using CluedIn.Crawling.Dynamics365.Core.Models;
+using CluedIn.Crawling.Factories;
 
 namespace CluedIn.Crawling.Dynamics365.ClueProducers
 {
@@ -38,10 +33,31 @@ namespace CluedIn.Crawling.Dynamics365.ClueProducers
         {
             var clue = CreateClue(input, accountId);
 
-            if (Uri.TryCreate(string.Format("{0}/main.aspx?pagetype=entityrecord&etn={1}&id={2}", _dynamics365CrawlJobData.Url, input.EntityDefinition.LogicalCollectionName, clue.Data.EntityData.Codes.FirstOrDefault().Value), UriKind.Absolute, out Uri uri))
-                clue.Data.EntityData.Uri = uri;
-
             Customize(clue, input);
+
+            try
+            {
+                if (string.IsNullOrWhiteSpace(clue.Data.EntityData.Name))
+                    clue.Data.EntityData.Name = input.Custom[input.EntityDefinition.Attributes.FirstOrDefault(a => a.IsPrimaryName).LogicalName]?.ToString();
+
+                if (clue.Data.EntityData.Uri == null)
+                    if (Uri.TryCreate(string.Format("{0}/main.aspx?pagetype=entityrecord&etn={1}&id={2}", _dynamics365CrawlJobData.Url, input.EntityDefinition.LogicalCollectionName, clue.Data.EntityData.Codes.FirstOrDefault().Value), UriKind.Absolute, out Uri uri))
+                        clue.Data.EntityData.Uri = uri;
+            }
+            catch
+            {
+
+            }
+
+            //whatever is left
+            if (input.EntityDefinition?.SchemaName != null)
+            {
+                foreach (var key in input.Custom.Keys)
+                {
+                    var customVocab = $"{Dynamics365Constants.ProviderName.ToLower()}.{input.EntityDefinition.SchemaName}.{key}";
+                    clue.Data.EntityData.Properties[customVocab] = input.Custom[key] as string;
+                }
+            }     
 
             if (!clue.Data.EntityData.OutgoingEdges.Any())
             {

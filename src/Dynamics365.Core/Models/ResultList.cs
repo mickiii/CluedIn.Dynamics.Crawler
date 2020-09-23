@@ -3,7 +3,7 @@ using Newtonsoft.Json;
 
 namespace CluedIn.Crawling.Dynamics365.Core.Models
 {
-    public class ResultList<T>
+    public class ResultList<T> 
     {
         [JsonProperty("@odata.context")]
         public string Context { get; set; }

@@ -16,7 +16,7 @@ namespace CluedIn.Crawling.Dynamics365.Core
         public Dynamics365CrawlJobData(IDictionary<string, object> configuration)
         {
             Url = configuration.GetValue(Dynamics365Constants.KeyName.Url, default(string));
-            DeltaCrawlEnabled = configuration.GetValue(Dynamics365Constants.KeyName.DeltaCrawlEnabled, true);
+            DeltaCrawlEnabled = configuration.GetValue(Dynamics365Constants.KeyName.DeltaCrawlEnabled, false);
             UserName = configuration.GetValue(Dynamics365Constants.KeyName.UserName, default(string));
             Password = configuration.GetValue(Dynamics365Constants.KeyName.Password, default(string));
             ClientId = configuration.GetValue(Dynamics365Constants.KeyName.ClientId, ConfigurationManager.AppSettings.GetValue<string>("Providers.Dynamics365ClientId", "cca0f097-58ec-4412-b975-43150326e34d"));

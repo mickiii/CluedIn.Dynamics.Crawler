@@ -2,7 +2,7 @@
 
 namespace CluedIn.Crawling.Dynamics365.Core.Models
 {
-    public class EntityDefinition
+    public class EntityDefinition 
     {
         public int ActivityTypeMask { get; set; }
         public bool AutoRouteToOwnerQueue { get; set; }
